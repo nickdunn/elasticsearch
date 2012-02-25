@@ -1,0 +1,9 @@
+td.spinner {
+	background-image: url(spinner.gif);
+	background-repeat: no-repeat;
+	background-position: 98% 50%;
+}
+
+td.count-column {
+	width: 200px;
+}

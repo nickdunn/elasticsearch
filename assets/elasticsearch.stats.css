@@ -1,0 +1,112 @@
+/*
+	Stats summary
+*/
+
+div.summary {
+	display: block;
+	margin: 10px 0;
+	padding: 0 19px;
+	overflow: hidden;
+	color: #888;
+}
+
+div.summary ul {
+	margin: 0;
+}
+
+div.summary li {
+	float: left;
+	margin-right: 3px;
+}
+
+div.summary li span {
+	font-weight: bold;
+}
+
+
+
+
+
+p.intro {
+	margin: 0 19px 10px 19px;
+	color: #887;
+}
+
+.search-index-log-filters {
+	margin: 0.5em 0 1.75em 0;
+    padding: 0 19px 1em 19px;
+    vertical-align: middle;
+    border-bottom: 1px solid #e6e6e5;
+	-moz-box-shadow: 0 3px 8px #f5f5f4;
+	-webkit-box-shadow: 0 3px 8px #f5f5f4;
+}
+
+.search-index-log-filters label {
+	display: inline-block;
+	margin-bottom: 5px;
+}
+
+.search-index-log-filters input[type='text'] {
+	width: auto;
+	font-size: 100%;
+}
+
+.search-index-log-filters p {
+	margin-left: 0;
+	margin-bottom: 0;
+}
+
+h2 {
+	line-height: 1 !important;
+}
+
+h2 span.meta {
+	left: 21em;
+	position: absolute;
+}
+
+table .date,
+table .depth,
+table .results,
+table .rank,
+table .percent,
+table .count {
+	width: 120px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+table .date {
+	width: 200px;
+}
+
+table .session_id {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+table td.inactive {
+	width: 1px;
+}
+
+table.sessions tbody tr.last td {
+	border-bottom: 1px solid #ccc;
+}
+
+table.sessions tbody tr:first-child td {
+	border-top: 1px solid #ddd;
+}
+table.sessions tbody tr:last-child td {
+	border-bottom: 1px solid #ddd;
+}
+
+table.sessions tbody tr td {
+	background: #F5F5F4;
+	border-color: #eee;
+}
+
+table.sessions tbody tr.alt td {
+	background: #fff;
+}
