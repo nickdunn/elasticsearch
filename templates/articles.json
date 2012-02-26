@@ -1,0 +1,30 @@
+{
+	"articles": {
+		"properties": {
+			"title": {
+				"type" : "multi_field",
+				"fields": {
+					"title": {"type" : "string"},
+					"raw" : {"type" : "string", "index" : "not_analyzed"},
+					"fulltext" : {"type" : "string", "analyzer": "symphony_fulltext"},
+					"autocomplete" : {"type" : "string", "analyzer": "symphony_autocomplete"}
+				}
+			},
+			"content": {
+				"type" : "multi_field",
+				"fields": {
+					"content": {"type" : "string"},
+					"raw" : {"type" : "string", "index" : "not_analyzed"},
+					"fulltext" : {"type" : "string", "analyzer": "symphony_fulltext"},
+					"autocomplete" : {"type" : "string", "analyzer": "symphony_autocomplete"}
+				}
+			},
+			"date": {
+				"type" : "date"
+			},
+			"upload": {
+				"type" : "attachment"
+			}
+		}
+	}
+}
