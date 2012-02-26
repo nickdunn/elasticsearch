@@ -1,0 +1,30 @@
+{
+	"analysis": {
+		"analyzer": {
+			"symphony_fulltext" : {                    
+				"type": "custom",
+				"tokenizer" : "standard",
+				"filter": ["stop", "asciifolding", "snowball", "lowercase", "custom_synonyms", "custom_stop"]
+			},
+			"symphony_autocomplete" : {                    
+				"type": "custom",
+				"tokenizer" : "standard",
+				"filter": ["asciifolding", "lowercase"]
+			}
+		},
+		"filter" : {
+			"custom_synonyms": {
+				"type": "synonym",
+				"ignore_case": "true",
+				"synonyms": [
+					"i-pod, i pod => ipod",
+					"nick => loser"
+				]
+			},
+			"custom_stop": {
+				"type": "stop",
+				"stopwords": ["airlock", "poo"]
+			}
+		}
+	}
+}
