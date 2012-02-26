@@ -8,6 +8,8 @@ ES overview
 Installing ES extension
 - preferences, hostname and index name
 - mappings, json and PHP
+- mapping naming convention, multi-field type
+- analyzers and custom Symphony alayzers (stop words, stemming etc)
 
 Securing ES
 - http auth
