@@ -33,6 +33,7 @@
 				'sections' =>  isset($_GET['sections']) ? array_map('trim', explode(',', $_GET['sections'])) : NULL,
 			);
 			
+			// don't run search if not searching for anything
 			if(empty($params->keywords)) return;
 			
 			// check valid page number
@@ -41,142 +42,153 @@
 			// include this extension's own library
 			ElasticSearch::init();
 			
-			$entries_querystring = new Elastica_Query_QueryString();
-			$entries_querystring->setDefaultOperator('AND');
+			// a query_string search type in ES accepts common (Lucene) search syntax such as
+			// prefixing terms with +/- and surrounding exact phrases with quotes
+			$query_querystring = new Elastica_Query_QueryString();
+			// all terms are required
+			$query_querystring->setDefaultOperator('AND');
+			// pass in keywords
+			$query_querystring->setQueryString($params->keywords);
+			// only apply the search to fields mapped as multi-type with a sub-type named "symphony_fulltext"
+			// this allows us to exclude fields from this generic full-site search but search them elsewhere
+			$query_querystring->setFields(array('*.symphony_fulltext'));
 			
-			// TODO: investigate impact of these, maybe they are useful
-			//$entries_querystring->setFuzzyPrefixLength(1);
-			//$entries_querystring->setPhraseSlop(1);
+			// create the parent query object (a factory) into which the query_string is passed
+			$query = new Elastica_Query($query_querystring);
+			$query->setLimit($params->{'per-page'});
+			// TODO: check this. should it be + 1?
+			$query->setFrom($params->{'per-page'} * ($params->{'current-page'} - 1));
+			$query->setSort(array($params->{'sort'} => $params->{'direction'}));
 			
-			// to analyse a search by snowball, it must be indexed this way too
-			// so set this in type mapping also, otherwise this will not work
-			// it will convert "library" to "librari" but if you didn't _index_ with
-			// snowball too, then "librari" won't be in your content, so no matches
-			//$entries_querystring->setAnalyzer('snowball');
-			
-			$entries_querystring->setQueryString($params->keywords);
-			$entries_querystring->setAnalyzer('custom_analyzer');
-			
-			$entries_query = new Elastica_Query($entries_querystring);
-			$entries_query->setLimit($params->{'per-page'});
-			$entries_query->setFrom($params->{'per-page'} * ($params->{'current-page'} - 1));
-			$entries_query->setSort(array(
-				$params->{'sort'} => $params->{'direction'}
-			));
-			
-			// copy this query to use for building facets matching the same keywords
-			$facet_query = $entries_query;
-			
-			// create a new facet using the document type (section)
-			$facet = new Elastica_Facet_Terms('filtered-entries-by-section');
-			$facet->setField('_type');
-			$facet_query->addFacet($facet);
-			
-			// build a search object, this wraps an Elastica_Client and handles
-			// requests to and from the ElasticSearch server
+			// build a search object, this wraps an Elastica_Client and handles requests to and from the ElasticSearch server
 			$search = new Elastica_Search(ElasticSearch::getClient());
+			// search on our site index only (in case the server is running multiple indexes)
 			$search->addIndex(ElasticSearch::getIndex());
 			
-			// the facet search should not be be filtered by selected sections, so
-			// run this query first before adding the type (section) filters
-			$facet_result = $search->search($facet_query);
-			
-			$entries_matchall_query = new Elastica_Query();
-			$facet = new Elastica_Facet_Terms('all-entries-by-section');
+			// create a new facet on the entry _type (section handle). this will return a list
+			// of sections in which the matching entries reside, and a count of matches in each
+			$facet = new Elastica_Facet_Terms('filtered-sections');
 			$facet->setField('_type');
-			$entries_matchall_query->addFacet($facet);
-			$facet_result_all = $search->search($entries_matchall_query);
+			$query->addFacet($facet);
 			
-			$sections = $tmp_sections = array();
-			$section_full_names = array();
+			// we also want a list of _all_ sections and their total entry counts. facets run within the context
+			// of the query they are attached to, so we want a new query that searches within the specified sections
+			// but doesn't search on the keywords (so it finds everything). ES supports this with a match_all query
+			// which Elastica creates by default when you create a plain query object
+			$query_all = new Elastica_Query();
+			$facet = new Elastica_Facet_Terms('all-sections');
+			$facet->setField('_type');
+			$query_all->addFacet($facet);
+			
 			// build an array of all valid section handles that have mappings
+			$all_mapped_sections = array();
+			$section_full_names = array();
 			foreach(ElasticSearch::getAllTypes() as $type) {
-				$tmp_sections[] = $type->section->get('handle');
+				$all_mapped_sections[] = $type->section->get('handle');
+				// cache an array of section names indexed by their handles, quick lookup later
 				$section_full_names[$type->section->get('handle')] = $type->section->get('name');
 			}
 			
-			// no params were sent, so default to all available sections
+			$sections = array();
+			// no specified sections were sent in the params, so default to all available sections
 			if($params->sections === NULL) {
-				$sections = $tmp_sections;
+				$sections = $all_mapped_sections;
 			}
-			// otherwise strip out sent sections that we don't have mappings for
+			// otherwise filter out any specified sections that we don't have mappings for, in case
+			// a user has made a typo or someone is tampering with the URL params
 			else {
 				foreach($params->sections as $handle) {
-					if(!in_array($handle, $tmp_sections)) continue;
+					if(!in_array($handle, $all_mapped_sections)) continue;
 					$sections[] = $handle;
 				}
 			}
 			
+			// a filter is an additional set of filtering that can be added to a query. filters are run
+			// after the query has executed, so run over the resultset and remove documents that don't
+			// match the criteria. they are fast and are cached by ES. we want to restrict the search
+			// results to within the specified sections only, so we add a filter on the _type (section handle)
+			// field. the filter is of type "terms" (an array of exact-match strings)
+			$filter = new Elastica_Filter_Terms('_type');
+			
+			// build an array of field handles which should be highlighted in search results, used for building
+			// the excerpt on results pages. a field is marked as highlighted by giving it a "symphony_highlight"
+			// value of "true" in the section mappings
 			$highlights = array();
-			foreach($sections as $section) {
-				
+			
+			// iterate over each valid section, adding it as a filter and finding any highlighted fields within
+			foreach($sections as $section) {				
 				// add these sections to the entry search
-				$search->addType($section);
-				
-				// highlight desired fields
+				$filter->addTerm($section);
+				// read the section's mapping JSON from disk
 				$mapping = json_decode(ElasticSearch::getTypeByHandle($section)->mapping_json, FALSE);
+				// find fields that have symphony_highlight
 				foreach($mapping->{$section}->properties as $field => $properties) {
 					if(!$properties->symphony_highlight) continue;
 					$highlights[] = array($field => (object)array());
 				}
 			}
 			
-			$entries_query->setHighlight(array(
+			// add the section filter to both queries (keyword search and the all entries facet search)
+			$query->setFilter($filter);
+			$query_all->setFilter($filter);
+			
+			// configure highlighting for the keyword search
+			$query->setHighlight(array(
+				'fields' => $highlights,
+				// encode any HTML attributes or entities, ensures valid XML
 				'encoder' => 'html',
+				// number of characters of each fragment returned
 				'fragment_size' => $config->{'highlight-fragment-size'},
+				// how many fragments allowed per field
 				'number_of_fragments' => $config->{'highlight-per-field'},
+				// custom highlighting tags
 				'pre_tags' => array('<strong class="highlight">'),
-				'post_tags' => array('</strong>'),
-				'fields' => $highlights
+				'post_tags' => array('</strong>')
 			));
 			
-			// run the entry search
-			$entries_result = $search->search($entries_query);
+			// run both queries!
+			$query_result = $search->search($query);
+			$query_all_result = $search->search($query_all);
 			
+			// build root XMK element
 			$xml = new XMLElement($this->dsParamROOTELEMENT, NULL, array(
-				'took' => $entries_result->getResponse()->getEngineTime() . 'ms',
-				'max-score' => $entries_result->getMaxScore()
+				'took' => $query_result->getResponse()->getEngineTime() . 'ms',
+				'max-score' => round($query_result->getMaxScore(), 4)
 			));
 			
+			// append keywords to the XML
 			$xml_keywords = new XMLElement('keywords', General::sanitize($params->keywords));
 			$xml->appendChild($xml_keywords);
 			
 			// build pagination
 			$xml->appendChild(General::buildPaginationElement(
-				$entries_result->getTotalHits(),
-				ceil($entries_result->getTotalHits() * (1 / $params->{'per-page'})),
+				$query_result->getTotalHits(),
+				ceil($query_result->getTotalHits() * (1 / $params->{'per-page'})),
 				$params->{'per-page'},
 				$params->{'current-page'}
 			));
 			
-			$xml_sections = new XMLElement('sections');
-			
-			// sections facet, filtered by current query
-			$filtered_facet = reset($facet_result->getFacets());
-			$filtered_facet = $filtered_facet['terms'];
-			
-			foreach($facet_result_all->getFacets() as $name => $data) {
-				
-				// all sections, not filtered
-				foreach($data['terms'] as $term) {
-					
-					$filtered_count = 0;
-					foreach($filtered_facet as $facet) {
-						if($facet['term'] !== $term['term']) continue;
-						$filtered_count = $facet['count'];
-					}
-					
-					$xml_sections->appendChild(new XMLElement('section', $section_full_names[$term['term']], array(
-							'handle' => $term['term'],
-							'entries' => $term['count'],
-							'entries-matching' => $filtered_count,
-							'active' => in_array($term['term'], $sections) ? 'yes' : 'no',
-						)
+			// build facets
+			$xml_facets = new XMLElement('facets');
+			// merge the facets from both queries so they appear as one
+			$facets = array_merge($query_result->getFacets(), $query_all_result->getFacets());
+			foreach($facets as $handle => $facet) {
+				$xml_facet = new XMLElement('facet', NULL, array('handle' => $handle));
+				foreach($facet['terms'] as $term) {
+					$xml_facet_term = new XMLElement('term', $section_full_names[$term['term']], array(
+						'handle' => $term['term'],
+						'entries' => $term['count'],
+						// mark whether this section was searched within
+						'active' => in_array($term['term'], $sections) ? 'yes' : 'no',
 					));
+					$xml_facet->appendChild($xml_facet_term);
 				}
+				$xml_facets->appendChild($xml_facet);
 			}
-			$xml->appendChild($xml_sections);
+			$xml->appendChild($xml_facets);
 			
+			// if each entry is to have its full XML built and appended to the result,
+			// create a new EntryManager for using later on
 			if($config->{'build-entry-xml'} === 'yes') {
 				$em = new EntryManager(Frontend::instance());
 				$field_pool = array();
@@ -184,14 +196,15 @@
 			
 			// append entries
 			$xml_entries = new XMLElement('entries');
-			foreach($entries_result->getResults() as $data) {
+			foreach($query_result->getResults() as $data) {
 				
 				$entry = new XMLElement('entry', NULL, array(
 					'id' => $data->getId(),
 					'section' => $data->getType(),
-					'score' => is_array($data->getScore()) ? reset($data->getScore()) : $data->getScore()
+					'score' => is_array($data->getScore()) ? reset($data->getScore()) : round($data->getScore(), 4)
 				));
 				
+				// append field highlights
 				foreach($data->getHighlights() as $field => $highlight) {
 					foreach($highlight as $html) {
 						$entry->appendChild(new XMLElement('highlight', $html, array('field' => $field)));
@@ -199,6 +212,7 @@
 				}
 				
 				// build and append entry data
+				// this was pinched from Symphony's datasource class
 				if($config->{'build-entry-xml'} === 'yes') {
 					$e = reset($em->fetch($data->getId()));
 					$field_data = $e->getData();
@@ -217,8 +231,9 @@
 			}
 			$xml->appendChild($xml_entries);
 			
+			// log query if logging is enabled
 			if ($config->{'log-searches'} === 'yes') {
-				ElasticSearchLogs::save($params->keywords, $sections, $params->{'current-page'}, $entries_result->getTotalHits());
+				ElasticSearchLogs::save($params->keywords, $sections, $params->{'current-page'}, $query_result->getTotalHits());
 			}
 			
 			return $xml;
