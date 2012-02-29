@@ -25,51 +25,70 @@
 			
 			// build an object of runtime parameters
 			$params = (object)array(
-				'fields' => isset($_GET['fields']) ? $_GET['fields'] : array(),
+				'keywords' => isset($_GET['keywords']) ? trim($_GET['keywords']) : '',
 				'per-page' => isset($_GET['per-page']) ? $_GET['per-page'] : $config->{'per-page'},
 				'sections' =>  isset($_GET['sections']) ? array_map('trim', explode(',', $_GET['sections'])) : NULL,
 			);
 			
-			if(!array($params->fields) || empty($params->fields)) return;
+			if(empty($params->keywords)) return;
+			// add trailing wildcard if it's not alreadt there
+			if(end(str_split($params->keywords)) !== '*') $params->keywords .= '*';
 			
 			ElasticSearch::init();
 			
-			$bool_query = new Elastica_Query_Bool();
+			$query_querystring = new Elastica_Query_QueryString();
+			$query_querystring->setDefaultOperator('AND');
+			$query_querystring->setQueryString($params->keywords);
+			$query_querystring->setFields(array('*.symphony_autocomplete'));
 			
-			foreach($params->fields as $key => $value) {
-				$query_text = new Elastica_Query_Text();
-			    $query_text->setFieldQuery($key, $value);
-			    $query_text->setFieldParam($key, 'type', 'phrase_prefix');
-				$bool_query->addShould($query_text);
-			}
+			$query = new Elastica_Query($query_querystring);
+			$query->setLimit($params->{'per-page'});
 			
 			$search = new Elastica_Search(ElasticSearch::getClient());
 			$search->addIndex(ElasticSearch::getIndex());
 			
-			$sections = $tmp_sections = array();
+			$filter = new Elastica_Filter_Terms('_type');
+			
 			// build an array of all valid section handles that have mappings
+			$all_mapped_sections = array();
+			$section_full_names = array();
 			foreach(ElasticSearch::getAllTypes() as $type) {
-				$tmp_sections[] = $type->section->get('handle');
+				$all_mapped_sections[] = $type->section->get('handle');
+				// cache an array of section names indexed by their handles, quick lookup later
+				$section_full_names[$type->section->get('handle')] = $type->section->get('name');
 			}
 			
-			// no params were sent, so default to all available sections
+			$sections = array();
+			// no specified sections were sent in the params, so default to all available sections
 			if($params->sections === NULL) {
-				$sections = $tmp_sections;
+				$sections = $all_mapped_sections;
 			}
-			// otherwise strip out sent sections that we don't have mappings for
+			// otherwise filter out any specified sections that we don't have mappings for, in case
+			// a user has made a typo or someone is tampering with the URL params
 			else {
 				foreach($params->sections as $handle) {
-					if(!in_array($handle, $tmp_sections)) continue;
+					if(!in_array($handle, $all_mapped_sections)) continue;
 					$sections[] = $handle;
 				}
 			}
 			
+			$autocomplete_fields = array();
 			foreach($sections as $section) {
-				$search->addType($section);
+				$filter->addTerm($section);
+				$mapping = json_decode(ElasticSearch::getTypeByHandle($section)->mapping_json, FALSE);
+				// find fields that have symphony_highlight
+				foreach($mapping->{$section}->properties as $field => $properties) {
+					if(!$properties->fields->symphony_autocomplete) continue;
+					$autocomplete_fields[] = $field;
+				}
 			}
 			
+			$autocomplete_fields = array_unique($autocomplete_fields);
+			
+			$query->setFilter($filter);
+			
 			// run the entry search
-			$entries_result = $search->search($bool_query);
+			$entries_result = $search->search($query);
 			
 			$xml = new XMLElement($this->dsParamROOTELEMENT, NULL, array(
 				'took' => $entries_result->getResponse()->getEngineTime() . 'ms',
@@ -86,9 +105,9 @@
 				));
 				
 				$source = $data->getSource();
-				foreach($params->fields as $key => $value) {
-					if(!isset($source[$key])) continue;
-					$entry->appendChild(new XMLElement($key, General::sanitize($source[$key])));
+				foreach($autocomplete_fields as $handle) {
+					if(!isset($source[$handle])) continue;
+					$entry->appendChild(new XMLElement($handle, General::sanitize($source[$handle])));
 				}
 				
 				$xml_entries->appendChild($entry);
