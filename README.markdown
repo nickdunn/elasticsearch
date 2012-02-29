@@ -13,3 +13,9 @@ Installing ES extension
 
 Securing ES
 - http auth
+
+TODO
+- fix deleting entry (dynamic section ID)
+- add useful stop words
+- add synonym examples
+- copy across templates to /workspace when installing (create dir structure)
