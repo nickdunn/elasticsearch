@@ -17,12 +17,14 @@
 				"type": "synonym",
 				"ignore_case": "true",
 				"synonyms": [
+					// todo: make these more sensible
 					"i-pod, i pod => ipod",
 					"nick => loser"
 				]
 			},
 			"custom_stop": {
 				"type": "stop",
+				// todo: make these more sensislbe
 				"stopwords": ["airlock", "poo"]
 			}
 		}

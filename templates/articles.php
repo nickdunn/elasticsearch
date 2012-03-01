@@ -15,7 +15,7 @@ class elasticsearch_articles {
 		// FILTERING
 		// to filter out entries, check the data and simply retun false from this
 		// method. for example if a Published checkbox must be ticked, check here
-		if($data['published']['value'] !== 'yes') return
+		if($data['published']['value'] !== 'yes') return;
 		
 		// EXAMPLE text input field
 		$json['title'] = $data['title']['value'];
@@ -26,7 +26,7 @@ class elasticsearch_articles {
 		// EXAMPLE file upload field. if the field is optional, check that the field
 		// has a value, or perhaps check that the file exists before sending it
 		// NOTE: this requires you have the "attachments" plugin installed in ES
-		$json['title'] = base64_encode(file_get_contents($data['my-upload-field']['file']));
+		$json['upload'] = base64_encode(file_get_contents($data['my-upload-field']['file']));
 		
 		return $json;
 	}
