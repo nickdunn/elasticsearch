@@ -1,4 +1,4 @@
-var ElasticSearch_Mappings = {
+var Elasticsearch_Mappings = {
 
 	sections: [],
 	progress: 0,
@@ -65,5 +65,5 @@ var ElasticSearch_Mappings = {
 };
 
 jQuery(document).ready(function() {
-	ElasticSearch_Mappings.init();
+	Elasticsearch_Mappings.init();
 });
