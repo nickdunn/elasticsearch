@@ -31,6 +31,7 @@
 				'sort' =>  isset($_GET['sort']) ? $_GET['sort'] : $config->sort,
 				'direction' =>  (isset($_GET['direction']) && in_array($_GET['direction'], array('asc', 'desc'))) ? $_GET['direction'] : $config->direction,
 				'sections' =>  (isset($_GET['sections']) && !empty($_GET['sections'])) ? array_map('trim', explode(',', $_GET['sections'])) : NULL,
+				'default-sections' => !empty($config->{'default-sections'}) ? explode(',', $config->{'default-sections'}) : NULL
 			);
 			
 			// don't run search if not searching for anything
@@ -83,10 +84,10 @@
 			// build an array of all valid section handles that have mappings
 			$all_mapped_sections = array();
 			$section_full_names = array();
-			$default_sections = explode(',', $config->{'default-sections'});
+			
 			foreach(ElasticSearch::getAllTypes() as $type) {
 				// if using default config sections, check that the type exists in the default
-				if(count($default_sections) > 0 && !in_array($type->section->get('handle'), $default_sections)) continue;
+				if(count($params->{'default-sections'}) > 0 && !in_array($type->section->get('handle'), $params->{'default-sections'})) continue;
 				$all_mapped_sections[] = $type->section->get('handle');
 				// cache an array of section names indexed by their handles, quick lookup later
 				$section_full_names[$type->section->get('handle')] = $type->section->get('name');
