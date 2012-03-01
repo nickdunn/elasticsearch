@@ -114,8 +114,8 @@
 			$filter = new Elastica_Filter_Terms('_type');
 			
 			// build an array of field handles which should be highlighted in search results, used for building
-			// the excerpt on results pages. a field is marked as highlighted by giving it a "symphony_highlight"
-			// value of "true" in the section mappings
+			// the excerpt on results pages. a field is marked as highlightable by giving it a "symphony_fulltext"
+			// field in the section mappings
 			$highlights = array();
 			
 			// iterate over each valid section, adding it as a filter and finding any highlighted fields within
