@@ -26,11 +26,11 @@
 			// build an object of runtime parameters
 			$params = (object)array(
 				'keywords' => isset($_GET['keywords']) ? $_GET['keywords'] : '',
-				'current-page' => isset($_GET['page']) ? $_GET['page'] : 1,
-				'per-page' => isset($_GET['per-page']) ? $_GET['per-page'] : $config->{'per-page'},
+				'current-page' => (isset($_GET['page']) && is_numeric($_GET['page'])) ? (int)$_GET['page'] : 1,
+				'per-page' => (isset($_GET['per-page']) && is_numeric($_GET['per-page'])) ? (int)$_GET['per-page'] : $config->{'per-page'},
 				'sort' =>  isset($_GET['sort']) ? $_GET['sort'] : $config->sort,
-				'direction' =>  isset($_GET['direction']) ? $_GET['direction'] : $config->direction,
-				'sections' =>  isset($_GET['sections']) ? array_map('trim', explode(',', $_GET['sections'])) : NULL,
+				'direction' =>  (isset($_GET['direction']) && in_array($_GET['direction'], array('asc', 'desc'))) ? $_GET['direction'] : $config->direction,
+				'sections' =>  (isset($_GET['sections']) && !empty($_GET['sections'])) ? array_map('trim', explode(',', $_GET['sections'])) : NULL,
 			);
 			
 			// don't run search if not searching for anything
@@ -83,7 +83,10 @@
 			// build an array of all valid section handles that have mappings
 			$all_mapped_sections = array();
 			$section_full_names = array();
+			$default_sections = explode(',', $config->{'default-sections'});
 			foreach(ElasticSearch::getAllTypes() as $type) {
+				// if using default config sections, check that the type exists in the default
+				if(count($default_sections) > 0 && !in_array($type->section->get('handle'), $default_sections)) continue;
 				$all_mapped_sections[] = $type->section->get('handle');
 				// cache an array of section names indexed by their handles, quick lookup later
 				$section_full_names[$type->section->get('handle')] = $type->section->get('name');
@@ -123,7 +126,7 @@
 				$mapping = json_decode(ElasticSearch::getTypeByHandle($section)->mapping_json, FALSE);
 				// find fields that have symphony_highlight
 				foreach($mapping->{$section}->properties as $field => $properties) {
-					if(!$properties->symphony_highlight) continue;
+					if(!$properties->fields->symphony_fulltext) continue;
 					$highlights[] = array($field => (object)array());
 				}
 			}
@@ -175,6 +178,8 @@
 			foreach($facets as $handle => $facet) {
 				$xml_facet = new XMLElement('facet', NULL, array('handle' => $handle));
 				foreach($facet['terms'] as $term) {
+					// only show sections that are in default config, if it is being used
+					if(!in_array($term['term'], $all_mapped_sections)) continue;
 					$xml_facet_term = new XMLElement('term', $section_full_names[$term['term']], array(
 						'handle' => $term['term'],
 						'entries' => $term['count'],
