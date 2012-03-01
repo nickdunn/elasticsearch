@@ -73,19 +73,35 @@
 			}
 			
 			$autocomplete_fields = array();
+			$highlights = array();
+			
 			foreach($sections as $section) {
 				$filter->addTerm($section);
 				$mapping = json_decode(ElasticSearch::getTypeByHandle($section)->mapping_json, FALSE);
 				// find fields that have symphony_highlight
 				foreach($mapping->{$section}->properties as $field => $properties) {
 					if(!$properties->fields->symphony_autocomplete) continue;
-					$autocomplete_fields[] = $field;
+					//$autocomplete_fields[] = $field;
+					$highlights[] = array($field => (object)array());
 				}
 			}
 			
 			$autocomplete_fields = array_unique($autocomplete_fields);
 			
 			$query->setFilter($filter);
+			
+			$query->setHighlight(array(
+				'fields' => $highlights,
+				// encode any HTML attributes or entities, ensures valid XML
+				'encoder' => 'html',
+				// number of characters of each fragment returned
+				'fragment_size' => 100,
+				// how many fragments allowed per field
+				'number_of_fragments' => 1,
+				// custom highlighting tags
+				'pre_tags' => array('<strong>'),
+				'post_tags' => array('</strong>')
+			));
 			
 			// run the entry search
 			$entries_result = $search->search($query);
@@ -95,25 +111,31 @@
 				'max-score' => $entries_result->getMaxScore()
 			));
 			
-			$xml_entries = new XMLElement('entries');
+			$words = array();
 			foreach($entries_result->getResults() as $data) {
-				
-				$entry = new XMLElement('entry', NULL, array(
-					'id' => $data->getId(),
-					'section' => $data->getType(),
-					'score' => is_array($data->getScore()) ? reset($data->getScore()) : $data->getScore()
-				));
-				
-				$source = $data->getSource();
-				foreach($autocomplete_fields as $handle) {
-					if(!isset($source[$handle])) continue;
-					$entry->appendChild(new XMLElement($handle, General::sanitize($source[$handle])));
+				foreach($data->getHighlights() as $field => $highlight) {
+					foreach($highlight as $html) {
+						$words[] = $html;
+					}
 				}
-				
-				$xml_entries->appendChild($entry);
 			}
+			$words = array_unique($words);
 			
-			$xml->appendChild($xml_entries);
+			$xml_words = new XMLElement('words');
+			foreach($words as $word) {
+				$raw = General::sanitize(strip_tags($word));
+				$sanitised = General::sanitize($word);
+				$xml_words->appendChild(
+					new XMLElement(
+						'word',
+						$sanitised,
+						array(
+							'raw' => $raw
+						)
+					)
+				);
+			}
+			$xml->appendChild($xml_words);
 			
 			return $xml;
 		}
