@@ -114,6 +114,7 @@
 					'highlight-fragment-size' => 200,
 					'highlight-per-field' => 1,
 					'build-entry-xml' => 'no',
+					'default-sections' => '',
 					
 					// logging
 					'log-searches' => 'yes',
