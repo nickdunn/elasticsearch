@@ -77,6 +77,7 @@
 		
 		public function install() {
 			
+			// create tables
 			Symphony::Database()->query(
 				"CREATE TABLE `tbl_elasticsearch_logs` (
 				  `id` varchar(255) NOT NULL DEFAULT '',
@@ -96,6 +97,7 @@
 				) ENGINE=MyISAM DEFAULT CHARSET=utf8;"
 			);
 			
+			// create config defaults
 			Symphony::Configuration()->setArray(
 				array('elasticsearch' => array(
 					
@@ -121,8 +123,35 @@
 					
 				))
 			);
+			
 			Administration::instance()->saveConfig();
 			
+			// create workspace structure
+			$config = (object)Symphony::Configuration()->get('directory');
+			General::realiseDirectory(WORKSPACE . '/elasticsearch', $config->{'write_mode'});
+			General::writeFile(WORKSPACE . '/elasticsearch/.htaccess', file_get_contents(EXTENSIONS . '/elasticsearch/templates/.htaccess'), $config->{'write_mode'});
+			General::writeFile(WORKSPACE . '/elasticsearch/index.json', file_get_contents(EXTENSIONS . '/elasticsearch/templates/index.json'), $config->{'write_mode'});
+			General::realiseDirectory(WORKSPACE . '/elasticsearch/mappings', $config->{'write_mode'});
+		}
+		
+		public function uninstall() {
+			
+			$config = (object)Symphony::Configuration()->get('elasticsearch');
+			
+			// delete the ES index
+			ElasticSearch::init(FALSE);
+			$index = ElasticSearch::getClient()->getIndex($config['index_name']);
+			if($index->exists()) $index->delete();
+			
+			// remove config
+			Symphony::Configuration()->remove('elasticsearch');			
+			Administration::instance()->saveConfig();
+			
+			// remove table
+			Symphony::Database()->query("DROP TABLE `tbl_elasticsearch_logs`");
+			
+			// remove workspace mappings
+			// TODO: perhaps General needs a removeDirectory method?
 		}
 		
 		public function generate_session($context) {
