@@ -124,16 +124,11 @@
 			$xml_words = new XMLElement('words');
 			foreach($words as $word) {
 				$raw = General::sanitize(strip_tags($word));
-				$sanitised = General::sanitize($word);
-				$xml_words->appendChild(
-					new XMLElement(
-						'word',
-						$sanitised,
-						array(
-							'raw' => $raw
-						)
-					)
-				);
+				$highlighted = General::sanitize($word);
+				$xml_word = new XMLElement('word');
+				$xml_word->appendChild(new XMLElement('raw', $raw));
+				$xml_word->appendChild(new XMLElement('highlighted', $highlighted));
+				$xml_words->appendChild($xml_word);
 			}
 			$xml->appendChild($xml_words);
 			
