@@ -107,8 +107,7 @@
 			$entries_result = $search->search($query);
 			
 			$xml = new XMLElement($this->dsParamROOTELEMENT, NULL, array(
-				'took' => $entries_result->getResponse()->getEngineTime() . 'ms',
-				'max-score' => $entries_result->getMaxScore()
+				'took' => $entries_result->getResponse()->getEngineTime() . 'ms'
 			));
 			
 			$words = array();
