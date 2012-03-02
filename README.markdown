@@ -68,7 +68,7 @@ Once installed you can view the plugin at:
 	http://yourdomain.com:9200/_plugin/head/
 
 ### elasticsearch-mapper-attachments
-This allows you to index the contents of binary files such as Word, PDF and [others](todo). Once installed you can use a field type of `attachment` when configuring section mappings (more on this later).
+This allows you to index the contents of binary files such as Word, PDF and [others](http://tika.apache.org/0.9/formats.html). Once installed you can use a field type of `attachment` when configuring section mappings (more on this later).
 
 ### todo elasticsearch-http-auth-basic
 By default ElasticSearch runs on port 9200 and is therefore open and public. In production environments you should lock down access using Basic HTTP Authentication (username/password, like using .htpasswd). This is provided by the TODO extension. Install by downloading the .jar file to your ES plugins directory
@@ -84,7 +84,7 @@ However leave this disabled for now. Enable it in production and add your userna
 
 ## 2. Configure the Symphony extension
 
-Before we go any further, you should know that ElasticSearch is powerful. It uses [Lucene](todo) under the hood, so it supports a ton of things like word stemming, stop words, ngrams, wildcards, accent folding, more like this, synonyms and more. I have written this ElasticSearch extension to provide you with a set of sensible defaults for fulltext search. If you want to change the way this works, then it's simply a case of modifying JSON files. But the idea is that this extension should give you excellent results 90% of the time.
+Before we go any further, you should know that ElasticSearch is powerful. It uses [Lucene](http://lucene.apache.org/) under the hood, so it supports a ton of things like word stemming, stop words, ngrams, wildcards, accent folding, more like this, synonyms and more. I have written this ElasticSearch extension to provide you with a set of sensible defaults for fulltext search. If you want to change the way this works, then it's simply a case of modifying JSON files. But the idea is that this extension should give you excellent results 90% of the time.
 
 ### File structure
 On installation the extension will have created a directory in your workspace folder named `elasticsearch` containing the following:
@@ -108,7 +108,7 @@ Fields within a document can be strings, numbers, dates, arrays/collections, or 
 
 The final things to understand are query types, analysers, tokenisers and filters. Stay with me, OK?
 
-A **query type** is how to query ElasticSearch e.g. text, boolean, wildcard, fuzzy. This extension just uses two types: [query_string](todo) and [match_all](todo).
+A **query type** is how to query ElasticSearch e.g. text, boolean, wildcard, fuzzy. This extension just uses two types: [query_string](http://www.elasticsearch.org/guide/reference/query-dsl/query-string-query.html) and [match_all](http://www.elasticsearch.org/guide/reference/query-dsl/match-all-query.html).
 
 **Analysers** are the logic that is run against both the content you are indexing (an entry) and what you are searching for (a keyword). An analyser comprises a **tokeniser**, which specifies how the tokens (usually words) are broken up (usually based on spaces between words), and **filters**, which work their magic on each word (such as removing stop words, reducing a word to its stem, or replacing with a synonym).
 
@@ -121,7 +121,7 @@ They are configured in the `index.json` file in your workspace directory.
 #### `symphony_fulltext`
 The fulltext analyser uses a suite of filters to strip down text into its most basic form:
 
-* `stop` applies Lucene's default [stop words list](todo)
+* `stop` applies Lucene's default [stop words list](https://github.com/apache/lucene-solr/blob/lucene_solr_3_5/lucene/src/java/org/apache/lucene/analysis/StopAnalyzer.java#L49-55)
 * `asciifolding` converts accented characters, e.g. `é` becomes `e`
 * `snowball` applies word stemming for European languages, e.g. `library` and `libraries` become `librari`
 * `lowercase` makes all words case-insensitive
@@ -291,7 +291,7 @@ The XML returned from this data source looks like this:
 		</entries>
 	</elasticsearch>
 
-The query returns two [facets](#todo) which are used as a breakdown of entries across sections. `filtered-sections` lists the sections for which entries were found, and how many. `all-sections` lists all sections and how many entries, regardless of the search query. The `@active` attribute is `yes` if the search is running on that section:
+The query returns two [facets](http://www.elasticsearch.org/guide/reference/api/search/facets/) which are used as a breakdown of entries across sections. `filtered-sections` lists the sections for which entries were found, and how many. `all-sections` lists all sections and how many entries, regardless of the search query. The `@active` attribute is `yes` if the search is running on that section:
 
 * if `?sections=articles,comments` is passed on the querystring then these sections will be used
 * if not, the `default-sections` list from Symphony's `manifest/config.php` file will be used
@@ -341,13 +341,13 @@ The `raw` element contains plain text while `highlighted` contains the string wi
 
 ## Logging and analysis
 
-If you have never looked over a search log, then shame on you. Do yourself a favour and read Lou Rosenfold's [Search Analytics For Your Site](#) to be instantly convinced that optimising search will benefit you and your users.
+If you have never looked over a search log, then shame on you. Do yourself a favour and read Lou Rosenfold's [Search Analytics For Your Site](http://rosenfeldmedia.com/books/searchanalytics/) to be instantly convinced that optimising search will benefit you and your users.
 
-You can [configure Google Analytics to track searches on your site](#). It will show you which terms were searched for, and which pages people started searching from (which usually means that page should contain information regarding their search term!). However Google Analytics isn't a dedicate search term analytics tool and doesn't give you the granular breakdown that analytics nerds so desperately desire. 
+You can [configure Google Analytics to track searches on your site](http://support.google.com/analytics/bin/answer.py?hl=en&answer=1012264). It will show you which terms were searched for, and which pages people started searching from (which usually means that page should contain information regarding their search term!). However Google Analytics isn't a dedicate search term analytics tool and doesn't give you the granular breakdown that analytics nerds so desperately desire. 
 
 To this end, this extension logs every search query is makes (disable logging in the config) for you to pore over in your spare time. Logs are broken down by:
 
-* **Session Logs** shows each individual user session, use this to spot behaviours such as [pogo-sticking](#todo), the difference between mobile and desktop use, and how users correct search terms (which can suggest synonyms to add to the index)
+* **Session Logs** shows each individual user session, use this to spot behaviours such as [pogo-sticking](http://wlion.com/blog/2006/06/19/who-really-cares-about-pogo-sticking/), the difference between mobile and desktop use, and how users correct search terms (which can suggest synonyms to add to the index)
 * **Query Logs** shows most popular search terms, so you can see which terms are used the most, the least, whether they return many hits, and whether people are prepared to sift through many pages
 
 
