@@ -17,15 +17,13 @@
 				"type": "synonym",
 				"ignore_case": "true",
 				"synonyms": [
-					// todo: make these more sensible
 					"i-pod, i pod => ipod",
-					"nick => loser"
+					"definately, definitly, definetly => definitely"
 				]
 			},
 			"custom_stop": {
 				"type": "stop",
-				// todo: make these more sensislbe
-				"stopwords": ["airlock", "poo"]
+				"stopwords": ["a", "an", "and", "are", "as", "at", "be", "but", "by", "into", "is", "it", "of", "on", "or", "such", "that", "the", "their", "there", "these", "they", "this", "to", "was", "will"]
 			}
 		}
 	}
