@@ -6,7 +6,7 @@
 * Requirements: Symphony 2.2
 
 ## Description
-The ElasticSearch extension integrates Symphony with [ElasticSearch](http://www.elasticsearch.org/) so provide powerful indexing and search for your site. It's cool.
+The ElasticSearch extension integrates Symphony with [ElasticSearch](http://www.elasticsearch.org/) to provide powerful indexing and search for your site.
 
 ## Usage
 1. Add the `elasticsearch` folder to your Extensions directory
@@ -15,7 +15,30 @@ The ElasticSearch extension integrates Symphony with [ElasticSearch](http://www.
 4. Create mapping files in `/workspace/elasticsearch/mappings`
 5. Send your mappings to ElasticSearch (using the ElasticSearch > Mappings page)
 
-## Installing ElasticSearch and plugins
+## Contents
+
+1. Install ElasticSearch 
+	* TODO: elasticsearch-service
+	* elasticsearch-head
+	* elasticsearch-mapper-attachments
+	* todo elasticsearch-http-auth-basic
+2. Configure the Symphony extension
+	* File structure
+	* Anatomy of ElasticSearch
+	* Modifying the custom analysers
+	* Section mappings
+	* Mapping Symphony data
+	* Create the index in ElasticSearch
+	* Submitting the mapping to ElasticSearch
+	* Batch indexing entries
+	* Congratulations
+3. Fulltext search data source
+	* Example search form
+	* Example XML response
+4. Autocomplete
+5. Logging and analysis
+
+## 1. Install ElasticSearch
 You will need to install ElasticSearch (ES) on your server. You'll need the Java installed on the box.
 
 	todo: instructions
@@ -24,10 +47,9 @@ ElasticSearch runs from its own webserver on port 9200, therefore a successful i
 
 	http//yourdomain.com:9200/
 
-### Installing ElasticSearch plugins
 There are several ES plugins you will find useful. They are all easy to install and use.
 
-#### TODO: elasticsearch-service
+### TODO: elasticsearch-service
 This plugin installs a shortcut to start/stop the ES service on your server. Install the plugin:
 
 	todo
@@ -36,7 +58,7 @@ You can `start`, `stop` or `restart` ElasticSearch using the following command f
 
 	service elasticsearch restart
 
-#### elasticsearch-head
+### elasticsearch-head
 This provides a UI for browsing your ES cluster, its indexes and content. Use it to test queries and explore new things.
 
 	todo: instructions
@@ -45,10 +67,10 @@ Once installed you can view the plugin at:
 
 	http://yourdomain.com:9200/_plugin/head/
 
-#### elasticsearch-mapper-attachments
+### elasticsearch-mapper-attachments
 This allows you to index the contents of binary files such as Word, PDF and [others](todo). Once installed you can use a field type of `attachment` when configuring section mappings (more on this later).
 
-#### todo elasticsearch-http-auth-basic
+### todo elasticsearch-http-auth-basic
 By default ElasticSearch runs on port 9200 and is therefore open and public. In production environments you should lock down access using Basic HTTP Authentication (username/password, like using .htpasswd). This is provided by the TODO extension. Install by downloading the .jar file to your ES plugins directory
 
 	todo
@@ -59,7 +81,8 @@ Then add the plugin configuration to your `elasticsearch.yaml` file:
 
 However leave this disabled for now. Enable it in production and add your username and password to the System > Preferences page.
 
-## Configuring the ElasticSearch extension
+
+## 2. Configure the Symphony extension
 
 Before we go any further, you should know that ElasticSearch is powerful. It uses [Lucene](todo) under the hood, so it supports a ton of things like word stemming, stop words, ngrams, wildcards, accent folding, more like this, synonyms and more. I have written this ElasticSearch extension to provide you with a set of sensible defaults for fulltext search. If you want to change the way this works, then it's simply a case of modifying JSON files. But the idea is that this extension should give you excellent results 90% of the time.
 
@@ -138,18 +161,18 @@ Begin by creating a file named `articles.json` in the mappings directory. This f
 					"store": "yes",
 					"fields": {
 						"content": {"type" : "string"},
-						"symphony_fulltext" : {"type" : "string", "analyzer": "symphony_fulltext"},
-						"symphony_autocomplete" : {"type" : "string", "analyzer": "symphony_autocomplete"}
-					}
+						"symphony_fulltext" : {"type" : "string", "analyzer": "symphony_fulltext"}
+					},
+					"symphony_highlight": "yes"
 				},
 				"document": {
 					"type" : "multi_field",
 					"store": "yes",
 					"fields": {
 						"document": {"type" : "attachment"},
-						"symphony_fulltext" : {"type" : "attachment", "analyzer": "symphony_fulltext"},
-						"symphony_autocomplete" : {"type" : "attachment", "analyzer": "symphony_autocomplete"}
-					}
+						"symphony_fulltext" : {"type" : "attachment", "analyzer": "symphony_fulltext"}
+					},
+					"symphony_highlight": "yes"
 				}
 			}
 		}
@@ -161,7 +184,9 @@ Wow, what is all this about? It's easy. It's an object that matches the handle o
 * `symphony_fulltext` indexes the field again but runs its content through the aforementioned `symphony_fulltext` analyser. Fields that define a `symphony_fulltext` index are searched against for fulltext search when using the search datasource bundled with this extension
 * `symphony_autocomplete` indexes the field again but runs its content through the aforementioned `symphony_autocomplete` analyser. Fields that define a `symphony_autocomplete` index are searched against for autocomplete/suggest search when using the autocomplete search datasource bundled with this extension
 
-The last thing of note is the `boost` for the `title` field. This means that text in the title field is ranked three times more important than other fields in the section.
+Adding a `boost` property for `title` ranks this field three times more important than other fields in the section. Adding a `symphony_highlight` property for `content` and `document` configures ElasticSearch to return excerpts from these fields with the search terms highlighted. See [Example XML response](#) for more.
+
+(Note: `symphony_highlight` is a custom property you won't find in the ElasticSearch docs — it is just used by this extension).
 
 ### Mapping Symphony data
 Creating the JSON mapping is the first of two steps. The second involves converting Symphony entry data from an array into the JSON that ElasticSearch expects. Again, it's easy. For your Articles section, create a file also in `workspace/elasticsearch/mappings` named `articles.php`.
@@ -213,8 +238,124 @@ From the ElasticSearch > Mappings page, select a row and choose `Reindex Entries
 ### Congratulations!
 You have installed ElasticSearch, configured the Symphony extension, and mapped your Symphony sections to be indexed.
 
-TODO
+
+## 3. Fulltext search data source
+Fulltext search across your indexed actions can be achieved using the custom ElasticSearch data source included with this extension. Attach this data source to you search results page and invoke it using the following GET parameters:
+
+* `keywords` the string to search on e.g. `foo bar`
+* `page` the results page number
+* `sort` (default `_score`) the field to sort results by
+* `direction` (default `desc`) either `asc` or `desc`
+* `per-page` (default `20`) number of results per page
+* `sections` a comma-delimited list of section handles to search within (only indexed sections will work) e.g. `articles,comments`
+
+The datasource executes a [query_string query](#) against any multi_type field with a field name of `symphony_fulltext`.
+
+### Example search form
+
+Your search form might look like this:
+
+	<form action="/search/" method="get">
+		<label>Search <input type="text" name="keywords" /></label>
+		<input type="hidden" name="per-page" value="10" />
+		<input type="hidden" name="sections" value="articles,comments,categories" />
+	</form>
+
+Note that all of these variables (except for `keywords`) have defaults in `config.php`. Change them in your config file and omit them from the URL.
+
+### Example XML response
+
+The XML returned from this data source looks like this:
+
+	<elasticsearch took="54ms" max-score="0.7293">
+		<keywords>foo bar</keywords>
+		<pagination total-entries="5" total-pages="1" entries-per-page="20" current-page="1" />
+		<facets>
+			<facet handle="filtered-sections">
+				<term handle="articles" entries="3" active="yes">Articles</term>
+				<term handle="comments" entries="2" active="yes">Comments</term>
+			</facet>
+			<facet handle="all-sections">
+				<term handle="articles" entries="100" active="yes">Articles</term>
+				<term handle="comments" entries="391" active="yes">Comments</term>
+			</facet>
+		</facets>
+		<entries>
+			<entry id="2" section="articles" score="0.7293">
+				<highlight field="title">My favourite words are <strong class="highlight">foo</strong> and <strong class="highlight">bar</strong>, but don't tell fred!</highlight>
+			</entry>
+			<entry id="4" section="comments" score="0.6213">...</entry>
+			<entry id="3" section="articles" score="0.5004">...</entry>
+			<entry id="1" section="articles" score="0.4277">...</entry>
+			<entry id="5" section="comments" score="0.2651">...</entry>
+		</entries>
+	</elasticsearch>
+
+The query returns two [facets](#todo) which are used as a breakdown of entries across sections. `filtered-sections` lists the sections for which entries were found, and how many. `all-sections` lists all sections and how many entries, regardless of the search query. The `@active` attribute is `yes` if the search is running on that section:
+
+* if `?sections=articles,comments` is passed on the querystring then these sections will be used
+* if not, the `default-sections` list from Symphony's `manifest/config.php` file will be used
+* if not, all indexed sections are used
+
+However this output is not sufficient to build a search results page (SERP) — you need the entries themselves. You can achieve this in one of two ways:
+
+1. use the `$ds-elasticsearch` output parameter from this data source to chain additional data sources to return the full entry XML
+2. set `build-entry-xml` to `yes` in Symphony's `manifest/config.php`, and the entry's fields will be appended to the XML
+
+
+## Autocomplete
+There is a second `ElasticSearch: Suggest` data source provided by this extension which, given a partial search term, will perform a wildcard search and return suggested phrases. This can be used for a basic autocomplete search box.
+
+Create a new page, give it a page type of `XML`, attach the suggest data source, and this XSLT:
+
+	<?xml version="1.0" encoding="UTF-8"?>
+	<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+		<xsl:output method="xml" omit-xml-declaration="yes" encoding="UTF-8" indent="yes" />
+
+		<xsl:template match="/">
+			<xsl:copy-of select="data/elasticsearch-suggest/words" />
+		</xsl:template>
+
+	</xsl:stylesheet>
+
+This query will be run against any multi_type field with a name of `symphony_autocomplete`, so only specify this name for fields that make sense for autocomplete. Choose fields like post titles, product SKUs and people's names.
+
+Pass the following querystring parameters:
+
+* `keywords` the string to search on e.g. `foo bar`
+* `sort` (default `_score`) the field to sort results by
+* `sections` a comma-delimited list of section handles to search within (only indexed sections will work) e.g. `articles,comments`
+
+The XML result looks like:
+
+	<words>
+		<word>
+			<raw>The Story of Foo and his Bar!</raw>
+			<highlighted>The Story Of &lt;strong&gt;Foo&lt;/strong&gt; and his &lt;strong&gt;Bar&lt;/strong&gt;!</highlighted>
+		</word>
+		...
+	</words>
+
+The `raw` element contains plain text while `highlighted` contains the string with matching full words highlighed. The result is entity-encoded to make JavaScript processing easier (treat it as plain text).
+
+## Logging and analysis
+
+If you have never looked over a search log, then shame on you. Do yourself a favour and read Lou Rosenfold's [Search Analytics For Your Site](#) to be instantly convinced that optimising search will benefit you and your users.
+
+You can [configure Google Analytics to track searches on your site](#). It will show you which terms were searched for, and which pages people started searching from (which usually means that page should contain information regarding their search term!). However Google Analytics isn't a dedicate search term analytics tool and doesn't give you the granular breakdown that analytics nerds so desperately desire. 
+
+To this end, this extension logs every search query is makes (disable logging in the config) for you to pore over in your spare time. Logs are broken down by:
+
+* **Session Logs** shows each individual user session, use this to spot behaviours such as [pogo-sticking](#todo), the difference between mobile and desktop use, and how users correct search terms (which can suggest synonyms to add to the index)
+* **Query Logs** shows most popular search terms, so you can see which terms are used the most, the least, whether they return many hits, and whether people are prepared to sift through many pages
+
+
+## Todo
+
 - fix deleting entry (dynamic section ID)
 - add useful stop words
 - add synonym examples
 - copy across templates to /workspace when installing (create dir structure)
+- sanitise user input: XSS and fix +/-/" using Clinton's Perl parser
+- comment out Drawer filtering in logs pages
