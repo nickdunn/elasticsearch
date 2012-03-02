@@ -22,7 +22,7 @@ Class ElasticSearch {
 		
 		$config = Symphony::Engine()->Configuration()->get('elasticsearch');
 		
-		if(empty($config['index_name'])) {
+		if(empty($config['index-name'])) {
 			throw new Exception('ElasticSearch index_name not set in configuration.');
 		}
 		
@@ -37,7 +37,7 @@ Class ElasticSearch {
 			throw new Exception('ElasticSearch client: ' . $e->getMessage());
 		}
 		
-		$index = $client->getIndex($config['index_name']);
+		$index = $client->getIndex($config['index-name']);
 		
 		if($auto_create_index) {
 			if(!$index->exists()) $index->create(array(), TRUE);

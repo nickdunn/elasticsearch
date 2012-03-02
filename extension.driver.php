@@ -103,7 +103,7 @@
 					
 					// default preferences
 					'host' => '',
-					'index_name' => '',
+					'index-name' => '',
 					
 					// batch reindexing
 					'reindex-batch-size' => 20,
@@ -140,7 +140,7 @@
 			
 			// delete the ES index
 			ElasticSearch::init(FALSE);
-			$index = ElasticSearch::getClient()->getIndex($config['index_name']);
+			$index = ElasticSearch::getClient()->getIndex($config['index-name']);
 			if($index->exists()) $index->delete();
 			
 			// remove config
@@ -215,8 +215,8 @@
 			
 			$label = Widget::Label(__('Index Name'));
 			$label->appendChild(Widget::Input(
-				'settings[elasticsearch][index_name]',
-				$config['index_name'],
+				'settings[elasticsearch][index-name]',
+				$config['index-name'],
 				null,
 				array(
 					'placeholder' => 'e.g. ' . Lang::createHandle(Symphony::Engine()->Configuration->get('sitename', 'general'))
@@ -227,7 +227,7 @@
 			
 			$label->appendChild(Widget::Input(
 				'settings[elasticsearch][index_name_original]',
-				$config['index_name'],
+				$config['index-name'],
 				null,
 				array(
 					'type' => 'hidden'
@@ -245,7 +245,7 @@
 			$settings = array_map('trim', $context['settings']['elasticsearch']);
 			
 			// index name has changed, so delete the original and create new
-			if(!empty($settings['index_name_original']) && ($settings['index_name'] !== $settings['index_name_original'])) {
+			if(!empty($settings['index_name_original']) && ($settings['index-name'] !== $settings['index_name_original'])) {
 				
 				// instantiate extension's ES helper class, do not auto create the index
 				ElasticSearch::init(FALSE);
@@ -255,7 +255,7 @@
 				if($index->exists()) $index->delete();
 				
 				// create new index
-				$index = ElasticSearch::getClient()->getIndex($settings['index_name']);
+				$index = ElasticSearch::getClient()->getIndex($settings['index-name']);
 				
 				$index_settings_file = WORKSPACE . '/elasticsearch/index.json';
 				$index_settings = array();
