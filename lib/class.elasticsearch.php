@@ -131,17 +131,8 @@ Class ElasticSearch {
 		self::getIndex()->refresh();
 	}
 	
-	public static function indexEntry($entry, $section) {
+	public static function indexEntry($entry, $section=NULL) {
 		self::init();
-		
-		if(!$section instanceOf Section) {
-			// build section
-			$sm = new SectionManager(Symphony::Engine());
-			$section = $sm->fetch($section);
-		}
-		
-		$type = self::getTypeByHandle($section->get('handle'));
-		if(!$type || !$type->type) return;
 		
 		if(!$entry instanceOf Entry) {
 			// build the entry
@@ -149,6 +140,15 @@ Class ElasticSearch {
 			$entry = reset($em->fetch($entry));
 		}
 		
+		if(!$section instanceOf Section) {
+			// build section
+			$sm = new SectionManager(Symphony::Engine());
+			$section = $sm->fetch($entry->get('section_id'));
+		}
+		
+		$type = self::getTypeByHandle($section->get('handle'));
+		if(!$type || !$type->type) return;
+
 		// build an array of entry data indexed by field handles
 		$data = array();
 		
@@ -174,16 +174,7 @@ Class ElasticSearch {
 		
 	}
 	
-	public static function deleteEntry($entry, $section) {
-		
-		if(!$section instanceOf Section) {
-			// build section
-			$sm = new SectionManager(Symphony::Engine());
-			$section = $sm->fetch($section);
-		}
-		
-		$type = self::getTypeByHandle($section->get('handle'));
-		if(!$type) return;
+	public static function deleteEntry($entry, $section=NULL) {
 		
 		if(!$entry instanceOf Entry) {
 			// build the entry
@@ -191,6 +182,15 @@ Class ElasticSearch {
 			$entry = reset($em->fetch($entry));
 		}
 		
+		if(!$section instanceOf Section) {
+			// build section
+			$sm = new SectionManager(Symphony::Engine());
+			$section = $sm->fetch($entry->get('section_id'));
+		}
+		
+		$type = self::getTypeByHandle($section->get('handle'));
+		if(!$type) return;
+
 		try {
 			$type->type->deleteById($entry->get('id'));
 		} catch(Exception $ex) { }
