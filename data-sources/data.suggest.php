@@ -32,7 +32,7 @@
 			
 			if(empty($params->keywords)) return;
 			// add trailing wildcard if it's not alreadt there
-			if(end(str_split($params->keywords)) !== '*') $params->keywords .= '*';
+			if(end(str_split($params->keywords)) !== '*') $params->keywords = '*' . $params->keywords . '*';
 			
 			ElasticSearch::init();
 			
@@ -42,7 +42,11 @@
 			$query_querystring->setFields(array('*.symphony_autocomplete'));
 			
 			$query = new Elastica_Query($query_querystring);
-			$query->setLimit($params->{'per-page'});
+			// returns loads. let's say we search for "romeo" and there are hundreds of lines that contain
+			// romeo but also the play title "romeo and juliet", the first 10 or 20 results might just be script lines
+			// containing "romeo", so the play title will not be included. so return a big chunk of hits to give a 
+			// better chance of more different terms being in the result. a tradeoff of speed/hackiness over usefulness.
+			$query->setLimit(1000);
 			
 			$search = new Elastica_Search(ElasticSearch::getClient());
 			$search->addIndex(ElasticSearch::getIndex());
@@ -72,7 +76,7 @@
 				}
 			}
 			
-			$autocomplete_fields = array();
+			//$autocomplete_fields = array();
 			$highlights = array();
 			
 			foreach($sections as $section) {
@@ -86,7 +90,7 @@
 				}
 			}
 			
-			$autocomplete_fields = array_unique($autocomplete_fields);
+			//$autocomplete_fields = array_unique($autocomplete_fields);
 			
 			$query->setFilter($filter);
 			
@@ -97,7 +101,7 @@
 				// number of characters of each fragment returned
 				'fragment_size' => 100,
 				// how many fragments allowed per field
-				'number_of_fragments' => 1,
+				'number_of_fragments' => 3,
 				// custom highlighting tags
 				'pre_tags' => array('<strong>'),
 				'post_tags' => array('</strong>')
