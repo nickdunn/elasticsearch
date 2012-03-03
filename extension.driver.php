@@ -185,8 +185,7 @@
 		public function deleteEntry($context) {
 			if(!is_array($context['entry_id'])) $context['entry_id'] = is_array($context['entry_id']);
 			foreach($context['entry_id'] as $entry_id) {
-				// TODO: make section_id (1) dynamic
-				ElasticSearch::deleteEntry($entry_id, 1);
+				ElasticSearch::deleteEntry($entry_id);
 			}
 		}
 		
