@@ -232,7 +232,7 @@ Class ElasticSearch {
 		$quotes = substr_count($keywords, '"');
 		if($quotes % 2) $keywords .= '"';
 		
-		return $keywords;
+		return trim($keywords);
 	}
 	
 }

@@ -30,9 +30,11 @@
 				'sections' =>  isset($_GET['sections']) ? array_map('trim', explode(',', $_GET['sections'])) : NULL,
 			);
 			
+			$params->keywords = ElasticSearch::filterKeywords($params->keywords);
 			if(empty($params->keywords)) return;
-			// add trailing wildcard if it's not alreadt there
-			if(end(str_split($params->keywords)) !== '*') $params->keywords = '*' . $params->keywords . '*';
+			
+			// add trailing wildcard if it's not already there
+			if(end(str_split($params->keywords)) !== '*') $params->keywords = $params->keywords . '*';
 			
 			ElasticSearch::init();
 			

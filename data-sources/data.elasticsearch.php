@@ -164,7 +164,9 @@
 			));
 			
 			// append keywords to the XML
-			$xml_keywords = new XMLElement('keywords', General::sanitize($params->keywords));
+			$xml_keywords = new XMLElement('keywords');
+			$xml_keywords->appendChild(new XMLElement('raw', General::sanitize($params->{'keywords-raw'})));
+			$xml_keywords->appendChild(new XMLElement('filtered', General::sanitize($params->{'keywords'})));
 			$xml->appendChild($xml_keywords);
 			
 			// build pagination
