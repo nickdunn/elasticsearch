@@ -30,6 +30,11 @@
 					'callback'	=> 'indexEntry'
 				),
 				array(
+					'page' => '/frontend/',
+					'delegate' => 'EventPostSaveFilter',
+					'callback' => 'indexEntry'
+				),
+				array(
 					'page'		=> '/publish/',
 					'delegate'	=> 'Delete',
 					'callback'	=> 'deleteEntry'
