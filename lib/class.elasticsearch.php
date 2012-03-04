@@ -205,7 +205,12 @@ Class ElasticSearch {
 		http://lucene.apache.org/core/old_versioned_docs/versions/3_0_0/queryparsersyntax.html
 	*/
 	public static function filterKeywords($keywords) {
-		$keywords = ' ' . trim($keywords, '-+ ');
+		// strip tags, should aid against XSS
+		$keywords = strip_tags($keywords);
+		// remove characters from start/end
+		$keywords = trim($keywords, '-+ ');
+		// append leading space for future matching
+		$keywords = ' ' . $keywords;
 		// remove wilcard `*` and `?` and fuzzy `~`
 		$keywords = preg_replace("/\*|\?|\~/", "", $keywords);
 		// remove range syntax `{}`
