@@ -353,7 +353,4 @@ To this end, this extension logs every search query is makes (disable logging in
 
 ## Todo
 
-- fix deleting entry (dynamic section ID)
-- index when submitting from an event
-- sanitise user input: XSS and fix +/-/" using Clinton's Perl parser
-- comment out Drawer filtering in logs pages
+- add installation todos in README
