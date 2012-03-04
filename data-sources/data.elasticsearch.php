@@ -34,6 +34,9 @@
 				'default-sections' => !empty($config->{'default-sections'}) ? explode(',', $config->{'default-sections'}) : NULL
 			);
 			
+			$params->{'keywords-raw'} = $params->keywords;
+			$params->keywords = ElasticSearch::filterKeywords($params->keywords);
+			
 			// don't run search if not searching for anything
 			if(empty($params->keywords)) return;
 			
