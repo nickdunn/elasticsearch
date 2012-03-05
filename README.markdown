@@ -382,6 +382,3 @@ To this end, this extension logs every search query is makes (disable logging in
 
 
 ## Todo
-
-- add installation todos in README
-- add support for http-basic auth!
