@@ -43,6 +43,13 @@
 		public function view() {
 			parent::view(FALSE);
 			
+			if(isset($this->mode)) {
+				$section = $this->mode;
+				header('Content-Type: application/json');
+				echo file_get_contents(WORKSPACE . '/elasticsearch/mappings/' . $section . '.json');
+				die;
+			}
+			
 			$this->addScriptToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.mappings.js', 101);
 			$this->addStylesheetToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.mappings.css', 'screen', 102);
 			
@@ -73,7 +80,7 @@
 					$col_name->appendChild(Widget::Input('items['.$type->section->get('handle').']', NULL, 'checkbox'));
 					
 					$col_fields = Widget::TableData(implode(', ', $type->fields));
-					$col_json = Widget::TableData(sprintf('<a href="%s">%s.json</a>', URL . '/workspace/elasticsearch/mappings/' . $type->section->get('handle') . '.json', $type->section->get('handle')));
+					$col_json = Widget::TableData(sprintf('<a href="%s">%s.json</a>', $type->section->get('handle'), $type->section->get('handle')));
 					
 					if($type->type) {
 						
@@ -86,7 +93,7 @@
 							$count_class . ' count-column'
 						);
 					} else {
-						$col_count = Widget::TableData('Rebuild mapping before continuing.', $count_class . ' count-column');
+						$col_count = Widget::TableData('Rebuild mapping before continuing', $count_class . ' count-column inactive');
 					}
 					
 					$attributes = array(
