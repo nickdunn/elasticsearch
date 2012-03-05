@@ -293,7 +293,8 @@
 			$span->appendChild(new XMLElement('input', NULL, array(
 				'type' => 'text',
 				'name' => 'filter[results][value]',
-				'value' => trim($filter->results, '=<>')
+				'value' => trim($filter->results, '=<>'),
+				'autocomplete' => 'off'
 			)));
 			
 			$span->appendChild(new XMLElement('span', ' ' . __('result(s)')));
@@ -310,7 +311,8 @@
 			$span->appendChild(new XMLElement('input', NULL, array(
 				'type' => 'text',
 				'name' => 'filter[depth][value]',
-				'value' => trim($filter->depth, '=<>')
+				'value' => trim($filter->depth, '=<>'),
+				'autocomplete' => 'off'
 			)));
 			$span->appendChild(new XMLElement('span', ' ' . __('page(s)')));
 			$label->appendChild($span);

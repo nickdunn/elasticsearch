@@ -284,7 +284,8 @@
 			$span->appendChild(new XMLElement('input', NULL, array(
 				'type' => 'text',
 				'name' => 'filter[average_results][value]',
-				'value' => trim($filter->average_results, '=<>')
+				'value' => trim($filter->average_results, '=<>'),
+				'autocomplete' => 'off'
 			)));
 			
 			$span->appendChild(new XMLElement('span', ' ' . __('result(s)')));
@@ -301,7 +302,8 @@
 			$span->appendChild(new XMLElement('input', NULL, array(
 				'type' => 'text',
 				'name' => 'filter[average_depth][value]',
-				'value' => trim($filter->average_depth, '=<>')
+				'value' => trim($filter->average_depth, '=<>'),
+				'autocomplete' => 'off'
 			)));
 			$span->appendChild(new XMLElement('span', ' ' . __('page(s)')));
 			$label->appendChild($span);
