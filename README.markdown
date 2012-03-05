@@ -71,7 +71,7 @@ This plugin installs a `service` shortcut to start/stop the ES service on your s
 You can now `start`, `stop` or `restart` ElasticSearch using the following command from anywhere:
 
 	service elasticsearch start
-	
+
 ElasticSearch runs on port 9200 by default, therefore a successful installation should yield some Douglas Adams gold at:
 
 	http://localhost:9200/
@@ -93,13 +93,23 @@ This allows you to index the contents of binary files such as Word, PDF and [oth
 	sudo /usr/local/share/elasticsearch/bin/plugin -install elasticsearch/elasticsearch-mapper-attachments/1.2.0
 
 ### <a name="es-elasticsearch-http-basic"/> elasticsearch-http-basic
-By default ElasticSearch runs on port 9200 and is therefore open and public. In production environments you should lock down access using Basic HTTP Authentication (username/password, like using .htpasswd). This is provided by the `elasticsearch-http-basic` plugin. Install by downloading the .jar file to your ES plugins directory
+By default ElasticSearch runs on port 9200 and is open and public. If running ElasticSearch on a public webserver, you can lock down access using Basic HTTP authentication. This is provided by the `elasticsearch-http-basic` plugin. Install by downloading the .jar file to your ES plugins directory
 
-	# https://github.com/downloads/Asquera/elasticsearch-http-basic/elasticsearch-http-basic-1.0.3.jar
+	mkdir /usr/local/share/elasticsearch/plugins/http-basic
+	cd /usr/local/share/elasticsearch/plugins/http-basic
+	wget https://github.com/downloads/Asquera/elasticsearch-http-basic/elasticsearch-http-basic-1.0.3.jar /usr/local/share/elasticsearch/plugins/http-basic
 
 Then add the plugin configuration to your `elasticsearch.yaml` file:
 	
-	todo
+	http.basic.enabled: true
+	http.basic.user: "my_username"
+	http.basic.password: "my_password"
+
+Restart ElasticSearch:
+	
+	service elasticsearch start
+
+The root of your ElasticSearch server (e.g. http://localhost:9200/) will still return JSON, so you can easily check server status. But other requests will be blocked. Add your username and password to the System > Preferences page in Symphony.
 
 
 ## <a name="es-configure"/> 2. Configure the Symphony extension

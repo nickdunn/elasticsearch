@@ -32,6 +32,9 @@ Class ElasticSearch {
 		
 		try {
 			$client = new Elastica_Client(array('url' => $config['host']));
+			if(!empty($config['username']) && !empty($config['password'])) {
+				$client->addHeader('Authorization', 'Basic ' . base64_encode($config['username'] . ':' . $config['password']));
+			}
 			$client->getStatus();
 		} catch (Exception $e) {
 			throw new Exception('ElasticSearch client: ' . $e->getMessage());

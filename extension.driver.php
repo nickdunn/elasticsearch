@@ -202,6 +202,7 @@
 			$fieldset->setAttribute('class', 'settings');
 			$fieldset->appendChild(new XMLElement('legend', 'ElasticSearch'));
 
+
 			$group = new XMLElement('div');
 			$group->setAttribute('class', 'group');
 			
@@ -228,6 +229,29 @@
 			));
 			$label->appendChild(new XMLElement('span', __('Use handle format (no spaces).'), array('class'=>'help')));
 			$group->appendChild($label);
+			
+			$fieldset->appendChild($group);
+			
+			
+			$group = new XMLElement('div');
+			$group->setAttribute('class', 'group');
+			
+			$label = Widget::Label(__('Username <i>Optional</i>'));
+			$label->appendChild(Widget::Input(
+				'settings[elasticsearch][username]',
+				$config['username'],
+				null
+			));
+			$group->appendChild($label);
+			
+			$label = Widget::Label(__('Password <i>Optional</i>'));
+			$label->appendChild(Widget::Input(
+				'settings[elasticsearch][password]',
+				$config['password'],
+				null
+			));
+			$group->appendChild($label);
+			
 			
 			$label->appendChild(Widget::Input(
 				'settings[elasticsearch][index_name_original]',
