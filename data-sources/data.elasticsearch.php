@@ -15,7 +15,7 @@
 		
 		public function about(){
 			return array(
-				'name' => 'ElasticSearch'
+				'name' => 'ElasticSearch: Search'
 			);
 		}
 

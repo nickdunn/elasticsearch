@@ -5,7 +5,7 @@
 	
 	require_once(EXTENSIONS . '/elasticsearch/lib/class.elasticsearch.php');
 
-	Class datasourcesuggest extends Datasource{
+	Class datasourceelasticsuggest extends Datasource{
 
 		public $dsParamROOTELEMENT = 'elasticsearch-suggest';
 
