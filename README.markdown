@@ -17,76 +17,96 @@ The ElasticSearch extension integrates Symphony with [ElasticSearch](http://www.
 
 ## Contents
 
-1. Install ElasticSearch 
-	* TODO: elasticsearch-service
-	* elasticsearch-head
-	* elasticsearch-mapper-attachments
-	* todo elasticsearch-http-auth-basic
-2. Configure the Symphony extension
-	* File structure
-	* Anatomy of ElasticSearch
-	* Modifying the custom analysers
-	* Section mappings
-	* Mapping Symphony data
-	* Create the index in ElasticSearch
-	* Submitting the mapping to ElasticSearch
-	* Batch indexing entries
-	* Congratulations
-3. Fulltext search data source
-	* Example search form
-	* Example XML response
-4. Autocomplete
-5. Logging and analysis
+1. [Install ElasticSearch](#es-install)
+	* [elasticsearch-servicewrapper](#es-elasticsearch-servicewrapper)
+	* [elasticsearch-head](#es-elasticsearch-head)
+	* [elasticsearch-mapper-attachments](#es-elasticsearch-mapper-attachments)
+	* [elasticsearch-http-basic](#es-elasticsearch-http-basic)
+2. [Configure the Symphony extension](#es-configure)
+	* [File structure](#es-file-structure)
+	* [Anatomy of ElasticSearch](#es-anatomy)
+	* [Modifying the custom analysers](#es-analysers)
+		* [symphony_fulltext](#es-symphony_fulltext)
+		* [symphony_autocomplete](#es-symphony_autocomplete)
+	* [Section mappings](#es-section-mappings)
+	* [Mapping Symphony data](#es-mapping-symphony-data)
+	* [Create the index in ElasticSearch](#es-create-index)
+	* [Submitting the mapping to ElasticSearch](#es-submit-mapping)
+	* [Batch indexing entries](#es-batch-indexing)
+	* [Congratulations](#es-congratulations)
+3. [Fulltext search data source](#es-search-datasource)
+	* [Example search form](#es-example-search-form)
+	* [Example XML response](#es-example-search-response)
+4. [Autocomplete](#es-autocomplete)
+5. [Logging and analysis](#es-logging)
 
-## 1. Install ElasticSearch
-You will need to install ElasticSearch (ES) on your server. You'll need the Java installed on the box.
+## <a name="es-install"/> 1. Install ElasticSearch
+You will need to install ElasticSearch (ES) on your server:
 
-	todo: instructions
+Linux:
 
-ElasticSearch runs from its own webserver on port 9200, therefore a successful installation should yield some Douglas Adams gold at:
+	# replace 0.18.7 with latest stable tag
+	cd ~
+	wget https://github.com/downloads/elasticsearch/elasticsearch/elasticsearch-0.18.7.tar.gz -O elasticsearch.tar.gz
+	tar -xf elasticsearch.tar.gz
+	rm elasticsearch.tar.gz
+	sudo mv elasticsearch-* elasticsearch
+	sudo mv elasticsearch /usr/local/share
 
-	http//yourdomain.com:9200/
+Mac OSX:
+
+	brew install elasticsearch
 
 There are several ES plugins you will find useful. They are all easy to install and use.
 
-### TODO: elasticsearch-service
-This plugin installs a shortcut to start/stop the ES service on your server. Install the plugin:
+### <a name="es-elasticsearch-servicewrapper"/> elasticsearch-servicewrapper
+This plugin installs a `service` shortcut to start/stop the ES service on your server. Install the plugin (assumes paths above, will be different for an OSX Homebrew install):
 
-	todo
+	curl -L http://github.com/elasticsearch/elasticsearch-servicewrapper/tarball/master | tar -xz
+	mv *servicewrapper*/service /usr/local/share/elasticsearch/bin/
+	rm -Rf *servicewrapper*
+	sudo /usr/local/share/elasticsearch/bin/service/elasticsearch install
+	sudo ln -s `readlink -f /usr/local/share/elasticsearch/bin/service/elasticsearch` /usr/local/bin/rcelasticsearch
 
-You can `start`, `stop` or `restart` ElasticSearch using the following command from anywhere:
+You can now `start`, `stop` or `restart` ElasticSearch using the following command from anywhere:
 
-	service elasticsearch restart
+	service elasticsearch start
+	
+ElasticSearch runs on port 9200 by default, therefore a successful installation should yield some Douglas Adams gold at:
 
-### elasticsearch-head
+	http://localhost:9200/
+
+### <a name="es-elasticsearch-head"/> elasticsearch-head
 This provides a UI for browsing your ES cluster, its indexes and content. Use it to test queries and explore new things.
 
-	todo: instructions
+	# installs from https://github.com/Aconex/elasticsearch-head
+	sudo /usr/local/share/elasticsearch/bin/plugin -install Aconex/elasticsearch-head
 
 Once installed you can view the plugin at:
 
-	http://yourdomain.com:9200/_plugin/head/
+	http://localhost:9200/_plugin/head/
 
-### elasticsearch-mapper-attachments
+### <a name="es-elasticsearch-mapper-attachments"/> elasticsearch-mapper-attachments
 This allows you to index the contents of binary files such as Word, PDF and [others](http://tika.apache.org/0.9/formats.html). Once installed you can use a field type of `attachment` when configuring section mappings (more on this later).
 
-### todo elasticsearch-http-auth-basic
-By default ElasticSearch runs on port 9200 and is therefore open and public. In production environments you should lock down access using Basic HTTP Authentication (username/password, like using .htpasswd). This is provided by the TODO extension. Install by downloading the .jar file to your ES plugins directory
+	# replace 1.2.0 with latest stable tag https://github.com/elasticsearch/elasticsearch-mapper-attachments
+	sudo /usr/local/share/elasticsearch/bin/plugin -install elasticsearch/elasticsearch-mapper-attachments/1.2.0
 
-	todo
+### <a name="es-elasticsearch-http-basic"/> elasticsearch-http-basic
+By default ElasticSearch runs on port 9200 and is therefore open and public. In production environments you should lock down access using Basic HTTP Authentication (username/password, like using .htpasswd). This is provided by the `elasticsearch-http-basic` plugin. Install by downloading the .jar file to your ES plugins directory
+
+	# https://github.com/downloads/Asquera/elasticsearch-http-basic/elasticsearch-http-basic-1.0.3.jar
 
 Then add the plugin configuration to your `elasticsearch.yaml` file:
 	
 	todo
 
-However leave this disabled for now. Enable it in production and add your username and password to the System > Preferences page.
 
-
-## 2. Configure the Symphony extension
+## <a name="es-configure"/> 2. Configure the Symphony extension
 
 Before we go any further, you should know that ElasticSearch is powerful. It uses [Lucene](http://lucene.apache.org/) under the hood, so it supports a ton of things like word stemming, stop words, ngrams, wildcards, accent folding, more like this, synonyms and more. I have written this ElasticSearch extension to provide you with a set of sensible defaults for fulltext search. If you want to change the way this works, then it's simply a case of modifying JSON files. But the idea is that this extension should give you excellent results 90% of the time.
 
-### File structure
+### <a name="es-file-structure"/> File structure
 On installation the extension will have created a directory in your workspace folder named `elasticsearch` containing the following:
 
 	/workspace
@@ -99,7 +119,7 @@ The `.htaccess` file keeps your files private. `index.json` is a JSON document w
 
 (If your permissions prevented these files from being created, create them now by copying the files from the `templates` directory of the extension.)
 
-### Anatomy of ElasticSearch
+### <a name="es-anatomy"/> Anatomy of ElasticSearch
 It's probably best to first describe the nomenclature you need to be familiar with when using ElasticSearch.
 
 ElasticSearch runs as a service on your webserver. If you are running a single server you are running a single ElasticSearch **cluster**. A single cluster can house the search for more than one site, each of which is stored in an **index**. When you use this extension, it will create a single index for your site (e.g. `my-site`). Within an index are **types**. These map nicely onto Symphony sections, e.g. `articles`, `products` or `comments`. ElasticSearch stores **documents** (Symphony entries) which are made up of **fields**.
@@ -112,13 +132,13 @@ A **query type** is how to query ElasticSearch e.g. text, boolean, wildcard, fuz
 
 **Analysers** are the logic that is run against both the content you are indexing (an entry) and what you are searching for (a keyword). An analyser comprises a **tokeniser**, which specifies how the tokens (usually words) are broken up (usually based on spaces between words), and **filters**, which work their magic on each word (such as removing stop words, reducing a word to its stem, or replacing with a synonym).
 
-### Modifying the custom analysers
+### <a name="es-analysers"/> Modifying the custom analysers
 
 ElasticSearch provides a suite of analysers which all have different combinations of tokenisers and filters. To prevent you from having to read, understand and apply these, this extension provides two custom analysers which are good for most situations. They are called `symphony_fulltext` and `symphony_autocomplete` and are used for fulltext search and search input autocomplete respectively.
 
 They are configured in the `index.json` file in your workspace directory.
 
-#### `symphony_fulltext`
+#### <a name="es-symphony_fulltext"/> symphony_fulltext
 The fulltext analyser uses a suite of filters to strip down text into its most basic form:
 
 * `stop` applies Lucene's default [stop words list](https://github.com/apache/lucene-solr/blob/lucene_solr_3_5/lucene/src/java/org/apache/lucene/analysis/StopAnalyzer.java#L49-55)
@@ -128,12 +148,12 @@ The fulltext analyser uses a suite of filters to strip down text into its most b
 * `custom_synonyms` applies a list of user-defined synonyms
 * `custom_stop` applies a list of user-defined stop words
 
-#### `symphony_autocomplete`
+#### <a name="es-symphony_autocomplete"/> symphony_autocomplete
 The autocomplete analyser is more forgiving than the fulltext analyser and just applies `asciifolding` and `lowercase` filters.
 
 It is important to note that the same analyser must be applied both to the indexed entry _and_ and search keywords. For example if the indexed entry contains the text `School Library`, it would be indexed as `school librari`. If a user searched for `School Library` then it would not be matched! The user's input keywords must also be run through the same analyser, so `school` and `lirari` can be matched.
 
-### Section mappings
+### <a name="es-section-mappings"/> Section mappings
 This is where the you put your new knowledge to the test, and you map your Symphony sections into ElasticSearch types. This is achieved by creating two files in the `workspace/elasticsearch/mappings` directory for each section you want to index. Let's assume you want to index a section named `Articles` which has four fields:
 
 * Title (input)
@@ -188,7 +208,7 @@ Adding a `boost` property for `title` ranks this field three times more importan
 
 (Note: `symphony_highlight` is a custom property you won't find in the ElasticSearch docs — it is just used by this extension).
 
-### Mapping Symphony data
+### <a name="es-mapping-symphony-data"/> Mapping Symphony data
 Creating the JSON mapping is the first of two steps. The second involves converting Symphony entry data from an array into the JSON that ElasticSearch expects. Again, it's easy. For your Articles section, create a file also in `workspace/elasticsearch/mappings` named `articles.php`.
 
 	<?php
@@ -219,7 +239,7 @@ If you need to prevent some entries from being indexed, then check them here. In
 
 Files can be indexed if you've got the `attachment` plugin installed. Send the file's contents as a base64 encoded string.
 
-### Create the index in ElasticSearch
+### <a name="es-create-index"/> Create the index in ElasticSearch
 First things first, we need to create our master index. Navigate to System > Preferences in Symphony and find the ElasticSearch settings.
 
 * `Host` is the full hostname of your ElasticSearch server. If running on the same webserver as Symphony use `http://localhost:9200/`
@@ -227,19 +247,19 @@ First things first, we need to create our master index. Navigate to System > Pre
 
 When you Save Changes, Symphony will connect to ElasticSearch and creates the index. This process sends the `index.json` document, which configures the index as it is created. If you modify the `index.json` file (e.g. you add new stop words or synonyms) then you must recreate the index from scratch. The easiest way to do this is simply to change the `Index Name` and save changes. The old index will be destroyed.
 
-### Submitting the mapping to ElasticSearch
+### <a name="es-submit-mapping"/> Submitting the mapping to ElasticSearch
 Creating the mapping JSON and PHP files is one step, but the JSON needs to be sent to ElasticSearch for it to build the mapping internally. To do this, navigate to the ElasticSearch > Mappings page in Symphony and you will see a list of sections you have written mappings for.
 
 Select the row and choose `Rebuild Mapping` from the With Selected menu. This will create the mapping type in ElasticSearch and you will be able to index entries!
 
-### Batch indexing entries
+### <a name="es-batch-indexing"/> Batch indexing entries
 From the ElasticSearch > Mappings page, select a row and choose `Reindex Entries` from the With Select menu. This will cycle through all entries in the section and batch-submit them for indexing. This should occur in near real time.
 
-### Congratulations!
+### <a name="es-congratulations"/> Congratulations!
 You have installed ElasticSearch, configured the Symphony extension, and mapped your Symphony sections to be indexed.
 
 
-## 3. Fulltext search data source
+## <a name="es-search-datasource"/> 3. Fulltext search data source
 Fulltext search across your indexed actions can be achieved using the custom ElasticSearch data source included with this extension. Attach this data source to you search results page and invoke it using the following GET parameters:
 
 * `keywords` the string to search on e.g. `foo bar`
@@ -251,7 +271,7 @@ Fulltext search across your indexed actions can be achieved using the custom Ela
 
 The datasource executes a [query_string query](#) against any multi_type field with a field name of `symphony_fulltext`.
 
-### Example search form
+### <a name="es-example-search-form"/> Example search form
 
 Your search form might look like this:
 
@@ -263,7 +283,7 @@ Your search form might look like this:
 
 Note that all of these variables (except for `keywords`) have defaults in `config.php`. Change them in your config file and omit them from the URL.
 
-### Example XML response
+### <a name="es-example-search-response"/> Example XML response
 
 The XML returned from this data source looks like this:
 
@@ -303,7 +323,7 @@ However this output is not sufficient to build a search results page (SERP) — 
 2. set `build-entry-xml` to `yes` in Symphony's `manifest/config.php`, and the entry's fields will be appended to the XML
 
 
-## Autocomplete
+## <a name="es-autocomplete"/> Autocomplete
 There is a second `ElasticSearch: Suggest` data source provided by this extension which, given a partial search term, will perform a wildcard search and return suggested phrases. This can be used for a basic autocomplete search box.
 
 Create a new page, give it a page type of `XML`, attach the suggest data source, and this XSLT:
@@ -339,7 +359,7 @@ The XML result looks like:
 
 The `raw` element contains plain text while `highlighted` contains the string with matching full words highlighed. The result is entity-encoded to make JavaScript processing easier (treat it as plain text).
 
-## Logging and analysis
+## <a name="es-logging"/> Logging and analysis
 
 If you have never looked over a search log, then shame on you. Do yourself a favour and read Lou Rosenfold's [Search Analytics For Your Site](http://rosenfeldmedia.com/books/searchanalytics/) to be instantly convinced that optimising search will benefit you and your users.
 
@@ -354,3 +374,4 @@ To this end, this extension logs every search query is makes (disable logging in
 ## Todo
 
 - add installation todos in README
+- add support for http-basic auth!
