@@ -1,9 +1,9 @@
 # ElasticSearch
 
-* Version: 0.2
+* Version: 0.3.0
 * Author: [Nick Dunn](http://nick-dunn.co.uk)
-* Build Date: 
-* Requirements: Symphony 2.2
+* Build Date: 2012-03-05
+* Requirements: Symphony 2.2.5
 
 ## Description
 The ElasticSearch extension integrates Symphony with [ElasticSearch](http://www.elasticsearch.org/) to provide powerful indexing and search for your site.

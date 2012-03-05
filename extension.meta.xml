@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension id="elasticsearch" status="released" xmlns="http://symphony-cms.com/schemas/extension/1.0">
+	<name>ElasticSearch</name>
+	<description>Integrates the powerful Lucene-based search engine, ElasticSearch, with Symphony.</description>
+	<repo type="github">https://github.com/nickdunn/elasticsearch</repo>
+	<types>
+		<type>Search</type>
+	</types>
+	<authors>
+		<author>
+			<name github="nickdunn" symphony="nickdunn">Nick Dunn</name>
+			<website>http://nick-dunn.co.uk</website>
+		</author>
+	</authors>
+	<releases>
+		<release version="0.3.0" date="2012-03-05" min="2.2.5" />
+	</releases>
+</extension>
