@@ -5,6 +5,8 @@
 	
 	class ElasticSearch_AdministrationPage extends AdministrationPage {
 		
+		public $use_drawer = TRUE;
+		
 		protected $filter = NULL;
 		protected $sort = NULL;
 		protected $pagination = NULL;
@@ -16,6 +18,10 @@
 		public function __construct(&$parent){
 			$this->uri = URL . '/symphony/extension/elasticsearch';
 			parent::__construct($parent);
+			
+			if(version_compare(Symphony::Configuration()->get('version', 'symphony'), '2.2.5', '>')) {
+				$this->use_drawer = FALSE;
+			}
 		}
 		
 		public function build($context) {

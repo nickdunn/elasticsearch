@@ -3,7 +3,7 @@
 	require_once(EXTENSIONS . '/elasticsearch/lib/class.elasticsearch_administrationpage.php');
 	require_once(EXTENSIONS . '/elasticsearch/lib/phpbrowscap/browscap/Browscap.php');
 	
-	//require_once(EXTENSIONS . '/search_index/lib/class.drawer.php');
+	require_once(EXTENSIONS . '/elasticsearch/lib/class.drawer.php');
 
 	class contentExtensionElasticSearchSessions extends ElasticSearch_AdministrationPage {
 		
@@ -17,6 +17,15 @@
 		public function view() {
 			
 			$this->addStylesheetToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.stats.css', 'screen', 102);
+			
+			if($this->use_drawer) {
+				$this->addStylesheetToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.drawer.css', 'screen', 103);
+				$this->addScriptToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.drawer.js', 103);
+
+				$this->addScriptToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.jquery.ui.js', 104);
+				$this->addStylesheetToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.jquery.daterangepicker.css', 'screen', 105);
+				$this->addScriptToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.jquery.daterangepicker.js', 106);
+			}
 			
 			parent::view(FALSE);
 			
@@ -68,7 +77,7 @@
 			$this->filter = $filter;
 			$this->pagination = $pagination;
 			
-			//$filters_drawer = new Drawer('Filters', $this->__buildDrawerHTML($filter));
+			$filters_drawer = new Drawer('Filters', $this->__buildDrawerHTML($filter));
 			
 			// Set up page meta data
 			/*-----------------------------------------------------------------------*/	
@@ -83,23 +92,10 @@
 					NULL,
 					'button'
 				)->generate()
+				. (($this->use_drawer) ? $filters_drawer->button->generate() : '')
 			);
 			
-			/*$stats = array(
-				'unique-users' => SearchIndexLogs::getStatsCount('unique-users', $filter),
-				'unique-searches' => SearchIndexLogs::getStatsCount('unique-searches', $filter),
-				'unique-terms' => SearchIndexLogs::getStatsCount('unique-terms', $filter),
-				'average-results' => SearchIndexLogs::getStatsCount('average-results', $filter)
-			);
-			
-			$filters = new XMLElement('div', NULL, array('class' => 'search-index-log-filters'));
-			$label = new XMLElement('label', __('Filter searches containing the keywords %s', array(Widget::Input('keywords', $filter_keywords)->generate())));
-			$filters->appendChild($label);
-			$filters->appendChild(new XMLElement('input', NULL, array('type' => 'submit', 'value' => __('Filter'), 'name' => 'filter[keyword]')));
-			
-			$filters->appendChild(new XMLElement('p', sprintf(__('<strong>%s</strong> unique searches from <strong>%s</strong> unique users via <strong>%s</strong> distinct search terms. Each search yielded an average of <strong>%s</strong> results.', array($stats['unique-searches'], $stats['unique-users'], $stats['unique-terms'], $stats['average-results']))), array('class' => 'intro')));
-			
-			$this->Form->appendChild($filters);*/
+			if($this->use_drawer) $this->Contents->appendChild($filters_drawer->drawer);
 			
 			$tableHead = array();
 			$tableBody = array();
@@ -260,14 +256,16 @@
 				'type' => 'text',
 				'placeholder' => __('From'),
 				'name' => 'filter[date_from]',
-				'value' => $filter->date_from
+				'value' => $filter->date_from,
+				'autocomplete' => 'off'
 			)));
 			$label->appendChild(new XMLElement('span', __('to'), array('class' => 'conjunctive')));
 			$label->appendChild(new XMLElement('input', NULL, array(
 				'type' => 'text',
 				'placeholder' => __('To'),
 				'name' => 'filter[date_to]',
-				'value' => $filter->date_to
+				'value' => $filter->date_to,
+				'autocomplete' => 'off'
 			)));
 			$form->appendChild($label);
 			

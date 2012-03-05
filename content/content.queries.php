@@ -1,13 +1,20 @@
 <?php
 	
 	require_once(EXTENSIONS . '/elasticsearch/lib/class.elasticsearch_administrationpage.php');
-	//require_once(EXTENSIONS . '/search_index/lib/class.drawer.php');
+	require_once(EXTENSIONS . '/elasticsearch/lib/class.drawer.php');
 	
 	class contentExtensionElasticSearchQueries extends ElasticSearch_AdministrationPage {
 		
 		public function view() {
 			
 			$this->addStylesheetToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.stats.css', 'screen', 102);
+			
+			$this->addStylesheetToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.drawer.css', 'screen', 103);
+			$this->addScriptToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.drawer.js', 103);
+			
+			$this->addScriptToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.jquery.ui.js', 104);
+			$this->addStylesheetToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.jquery.daterangepicker.css', 'screen', 105);
+			$this->addScriptToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.jquery.daterangepicker.js', 106);
 			
 			parent::view(FALSE);
 			
@@ -63,6 +70,8 @@
 			$this->filter = $filter;
 			$this->pagination = $pagination;
 						
+			$filters_drawer = new Drawer('Filters', $this->__buildDrawerHTML($filter));
+			
 		// Set up page meta data
 		/*-----------------------------------------------------------------------*/	
 			
@@ -76,7 +85,10 @@
 					NULL,
 					'button'
 				)->generate()
+				. (($this->use_drawer) ? $filters_drawer->button->generate() : '')
 			);
+			
+			if($this->use_drawer) $this->Contents->appendChild($filters_drawer->drawer);
 			
 			
 		// Build summary
@@ -235,14 +247,16 @@
 				'type' => 'text',
 				'placeholder' => __('From'),
 				'name' => 'filter[date_from]',
-				'value' => $filter->date_from
+				'value' => $filter->date_from,
+				'autocomplete' => 'off'
 			)));
 			$label->appendChild(new XMLElement('span', __('to'), array('class' => 'conjunctive')));
 			$label->appendChild(new XMLElement('input', NULL, array(
 				'type' => 'text',
 				'placeholder' => __('To'),
 				'name' => 'filter[date_to]',
-				'value' => $filter->date_to
+				'value' => $filter->date_to,
+				'autocomplete' => 'off'
 			)));
 			$form->appendChild($label);
 			
