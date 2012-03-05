@@ -382,3 +382,4 @@ To this end, this extension logs every search query is makes (disable logging in
 
 
 ## Todo
+- support for multilang using naming conventions e.g. *_en.symphony_fulltext
