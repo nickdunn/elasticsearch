@@ -39,7 +39,8 @@ The ElasticSearch extension integrates Symphony with [ElasticSearch](http://www.
 	* [Example search form](#es-example-search-form)
 	* [Example XML response](#es-example-search-response)
 4. [Autocomplete](#es-autocomplete)
-5. [Logging and analysis](#es-logging)
+5. [Multilingual Search](#es-multilingual-search)
+6. [Logging and analysis](#es-logging)
 
 ## <a name="es-install"/> 1. Install ElasticSearch
 You will need to install ElasticSearch (ES) on your server:
