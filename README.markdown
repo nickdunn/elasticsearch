@@ -33,6 +33,7 @@ The ElasticSearch extension integrates Symphony with [ElasticSearch](http://www.
 	* [Create the index in ElasticSearch](#es-create-index)
 	* [Submitting the mapping to ElasticSearch](#es-submit-mapping)
 	* [Batch indexing entries](#es-batch-indexing)
+	* [Additional configuration](#es-additional-configuration)
 	* [Congratulations](#es-congratulations)
 3. [Fulltext search data source](#es-search-datasource)
 	* [Example search form](#es-example-search-form)
@@ -265,6 +266,23 @@ Select the row and choose `Rebuild Mapping` from the With Selected menu. This wi
 ### <a name="es-batch-indexing"/> Batch indexing entries
 From the ElasticSearch > Mappings page, select a row and choose `Reindex Entries` from the With Select menu. This will cycle through all entries in the section and batch-submit them for indexing. This should occur in near real time.
 
+### <a name="es-additional-configuration"/> Additional configuration
+All configuration options are stored in the Symphony config file.
+
+* `host` root URL of your ElasticSearch server (e.g. `http://localhost:9200/`)
+* `index-name` index name (e.g. `my-site`)
+* `reindex-batch-size` (default `20`) number of simultaneously entries to reindex when manually reindexing a section
+* `reindex-batch-delay` (default `0`) number of seconds between each batch (reduce if you find this activity hogs server resources, allows the server to recover between each batch!)
+* `per-page` (default `20`) default number of entries per page of search results
+* `sort` (default `_score`) default sort field (use ElasticSearch fields like `_score` or `_id` for best results)
+* `direction` (default `desc`) default sort direction
+* `highlight-fragment-size` (default `200`) maximum number of characters of each excerpt highlight
+* `highlight-per-field` (default `1`) maximum number of highlights returned per field
+* `build-entry-xml` (default `no`) whether to build full entry XML (all fields) in search results
+* `default-sections` (default ``) default list of section handles to search in (comma-delimited)
+* `default-language` (default ``) default list of languages to search in (comma-delimited)
+* `logging` (default `yes`) whether to log each keyword search
+
 ### <a name="es-congratulations"/> Congratulations!
 You have installed ElasticSearch, configured the Symphony extension, and mapped your Symphony sections to be indexed.
 
@@ -278,6 +296,7 @@ Fulltext search across your indexed actions can be achieved using the custom Ela
 * `direction` (default `desc`) either `asc` or `desc`
 * `per-page` (default `20`) number of results per page
 * `sections` a comma-delimited list of section handles to search within (only indexed sections will work) e.g. `articles,comments`
+* `language` an optional string referring to the language code of your indexed fields (see [Multilingual search](#es-multilingual-search))
 
 The datasource executes a [query_string query](#) against any multi_type field with a field name of `symphony_fulltext`.
 
@@ -369,13 +388,85 @@ The XML result looks like:
 
 The `raw` element contains plain text while `highlighted` contains the string with matching full words highlighed. The result is entity-encoded to make JavaScript processing easier (treat it as plain text).
 
+## <a name="es-multilingual-search" /> Multilingual Search
+While ElasticSearch does not support multilingual content out of the box, it is still still possible to index and search your multilingual entries by adhering to a simple naming convention that this extension uses.
+
+Let's say you have an Articles section with two multilingual fields: Title and Content. When you create the section mapping, you can map each of these fields for each language. For example mapping the two fields for English and German:
+
+	{
+		"articles": {
+			"properties": {
+				"title_en": {
+					"type" : "multi_field",
+					"store": "yes",
+					"fields": {
+						"title_en": {"type" : "string"},
+						...
+					}
+				},
+				"title_de": {
+					"type" : "multi_field",
+					"store": "yes",
+					"fields": {
+						"title_de": {"type" : "string"},
+						...
+					}
+				},
+				"content_en": {
+					"type" : "multi_field",
+					"store": "yes",
+					"fields": {
+						"title_en": {"type" : "string"},
+						...
+					}
+				},
+				"content_de": {
+					"type" : "multi_field",
+					"store": "yes",
+					"fields": {
+						"title_de": {"type" : "string"},
+						...
+					}
+				}
+			}
+		}
+	}
+
+And the PHP mapper (note the structure for getting the per-language data might vary depending on which multilingual extension you are using in Symphony):
+
+	<?php
+	class elasticsearch_articles {
+		public function mapData(Array $data, Entry $entry) {
+			$json = array();
+			// title
+			$json['title_en'] = $data['title']['value']['en'];
+			$json['title_de'] = $data['title']['value']['de'];
+			// content
+			$json['content_en'] = $data['content']['value']['en'];
+			$json['content_de'] = $data['content']['value']['de'];
+			return $json;
+		}
+	}
+
+Two Symphony fields, mapped to four ElasticSearch fields.
+
+To search a specific language only, you can pass `language` URL parameter to your search page. For example:
+
+	http://localhost/search/?sections=articles&keywords=foo+bar&language=en
+
+Multiple languages can be searched at once:
+
+	http://localhost/search/?sections=articles&keywords=foo+bar&language=en,de
+
+Omit the `language` parameter to search all fields. If `language` is omitted you can specify a default for the `default-language` property the Symphony config file. The same convention also applies to the autocomplete data source.
+
 ## <a name="es-logging"/> Logging and analysis
 
 If you have never looked over a search log, then shame on you. Do yourself a favour and read Lou Rosenfold's [Search Analytics For Your Site](http://rosenfeldmedia.com/books/searchanalytics/) to be instantly convinced that optimising search will benefit you and your users.
 
 You can [configure Google Analytics to track searches on your site](http://support.google.com/analytics/bin/answer.py?hl=en&answer=1012264). It will show you which terms were searched for, and which pages people started searching from (which usually means that page should contain information regarding their search term!). However Google Analytics isn't a dedicate search term analytics tool and doesn't give you the granular breakdown that analytics nerds so desperately desire. 
 
-To this end, this extension logs every search query is makes (disable logging in the config) for you to pore over in your spare time. Logs are broken down by:
+To this end, this extension logs every search query it makes (disable logging in the config) for you to pore over in your spare time. Logs are broken down by:
 
 * **Session Logs** shows each individual user session, use this to spot behaviours such as [pogo-sticking](http://wlion.com/blog/2006/06/19/who-really-cares-about-pogo-sticking/), the difference between mobile and desktop use, and how users correct search terms (which can suggest synonyms to add to the index)
 * **Query Logs** shows most popular search terms, so you can see which terms are used the most, the least, whether they return many hits, and whether people are prepared to sift through many pages
