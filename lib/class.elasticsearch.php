@@ -1,4 +1,4 @@
-<?
+<?php
 
 function __autoload_elastica ($class) {
 	$path = str_replace('_', '/', $class);
