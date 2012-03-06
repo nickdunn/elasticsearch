@@ -1,8 +1,8 @@
 # ElasticSearch
 
-* Version: 0.3.0
+* Version: 0.3.1
 * Author: [Nick Dunn](http://nick-dunn.co.uk)
-* Build Date: 2012-03-05
+* Build Date: 2012-03-06
 * Requirements: Symphony 2.2.5
 
 ## Description

@@ -8,8 +8,8 @@
 		public function about() {
 			return array(
 				'name'			=> 'ElasticSearch',
-				'version'		=> '0.2',
-				'release-date'	=> '',
+				'version'		=> '0.3.1',
+				'release-date'	=> '2012-03-06',
 				'author'		=> array(
 					'name'			=> 'Nick Dunn'
 				),
