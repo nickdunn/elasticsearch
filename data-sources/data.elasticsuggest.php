@@ -28,6 +28,9 @@
 				'keywords' => isset($_GET['keywords']) ? trim($_GET['keywords']) : '',
 				'per-page' => isset($_GET['per-page']) ? $_GET['per-page'] : $config->{'per-page'},
 				'sections' =>  isset($_GET['sections']) ? array_map('trim', explode(',', $_GET['sections'])) : NULL,
+				'default-sections' => !empty($config->{'default-sections'}) ? explode(',', $config->{'default-sections'}) : NULL,
+				'language' =>  (isset($_GET['language']) && !empty($_GET['language'])) ? array_map('trim', explode(',', $_GET['language'])) : NULL,
+				'default-language' => !empty($config->{'default-language'}) ? explode(',', $config->{'default-language'}) : NULL
 			);
 			
 			$params->keywords = ElasticSearch::filterKeywords($params->keywords);
@@ -36,12 +39,26 @@
 			// add trailing wildcard if it's not already there
 			if(end(str_split($params->keywords)) !== '*') $params->keywords = $params->keywords . '*';
 			
+			// if no language passed but there are defaults, use the defaults
+			if($params->{'language'} === NULL && count($params->{'default-language'})) {
+				$params->{'language'} = $params->{'default-language'};
+			}
+			
 			ElasticSearch::init();
 			
 			$query_querystring = new Elastica_Query_QueryString();
 			$query_querystring->setDefaultOperator('AND');
 			$query_querystring->setQueryString($params->keywords);
-			$query_querystring->setFields(array('*.symphony_autocomplete'));
+			
+			if($params->{'language'}) {
+				$fields = array();
+				foreach($params->{'language'} as $language) {
+					$fields[] = '*_' . $language . '.symphony_fulltext';
+				}
+				$query_querystring->setFields($fields);
+			} else {
+				$query_querystring->setFields(array('*.symphony_fulltext'));
+			}
 			
 			$query = new Elastica_Query($query_querystring);
 			// returns loads. let's say we search for "romeo" and there are hundreds of lines that contain
@@ -59,6 +76,7 @@
 			$all_mapped_sections = array();
 			$section_full_names = array();
 			foreach(ElasticSearch::getAllTypes() as $type) {
+				if(count($params->{'default-sections'}) > 0 && !in_array($type->section->get('handle'), $params->{'default-sections'})) continue;
 				$all_mapped_sections[] = $type->section->get('handle');
 				// cache an array of section names indexed by their handles, quick lookup later
 				$section_full_names[$type->section->get('handle')] = $type->section->get('name');
