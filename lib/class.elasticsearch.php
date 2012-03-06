@@ -156,7 +156,7 @@ Class ElasticSearch {
 		$data = array();
 		
 		foreach($section->fetchFields() as $f) {
-			if(!in_array($f->get('element_name'), $type->fields)) continue;
+			//if(!in_array($f->get('element_name'), $type->fields)) continue;
 			$data[$f->get('element_name')] = $entry->getData($f->get('id'));
 		}
 		

@@ -122,6 +122,7 @@
 					'highlight-per-field' => 1,
 					'build-entry-xml' => 'no',
 					'default-sections' => '',
+					'default-language' => '',
 					
 					// logging
 					'log-searches' => 'yes',

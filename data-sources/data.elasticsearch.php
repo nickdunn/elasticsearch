@@ -31,7 +31,9 @@
 				'sort' =>  isset($_GET['sort']) ? $_GET['sort'] : $config->sort,
 				'direction' =>  (isset($_GET['direction']) && in_array($_GET['direction'], array('asc', 'desc'))) ? $_GET['direction'] : $config->direction,
 				'sections' =>  (isset($_GET['sections']) && !empty($_GET['sections'])) ? array_map('trim', explode(',', $_GET['sections'])) : NULL,
-				'default-sections' => !empty($config->{'default-sections'}) ? explode(',', $config->{'default-sections'}) : NULL
+				'default-sections' => !empty($config->{'default-sections'}) ? explode(',', $config->{'default-sections'}) : NULL,
+				'language' =>  (isset($_GET['language']) && !empty($_GET['language'])) ? array_map('trim', explode(',', $_GET['language'])) : NULL,
+				'default-language' => !empty($config->{'default-language'}) ? explode(',', $config->{'default-language'}) : NULL
 			);
 			
 			$params->{'keywords-raw'} = $params->keywords;
@@ -42,6 +44,11 @@
 			
 			// check valid page number
 			if($params->{'current-page'} < 1) $params->{'current-page'} = 1;
+			
+			// if no language passed but there are defaults, use the defaults
+			if($params->{'language'} === NULL && count($params->{'default-language'})) {
+				$params->{'language'} = $params->{'default-language'};
+			}
 			
 			// include this extension's own library
 			ElasticSearch::init();
@@ -55,7 +62,15 @@
 			$query_querystring->setQueryString($params->keywords);
 			// only apply the search to fields mapped as multi-type with a sub-type named "symphony_fulltext"
 			// this allows us to exclude fields from this generic full-site search but search them elsewhere
-			$query_querystring->setFields(array('*.symphony_fulltext'));
+			if($params->{'language'}) {
+				$fields = array();
+				foreach($params->{'language'} as $language) {
+					$fields[] = '*_' . $language . '.symphony_fulltext';
+				}
+				$query_querystring->setFields($fields);
+			} else {
+				$query_querystring->setFields(array('*.symphony_fulltext'));
+			}
 			
 			// create the parent query object (a factory) into which the query_string is passed
 			$query = new Elastica_Query($query_querystring);
