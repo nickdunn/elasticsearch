@@ -146,7 +146,7 @@
 			
 			// delete the ES index
 			ElasticSearch::init(FALSE);
-			$index = ElasticSearch::getClient()->getIndex($config['index-name']);
+			$index = ElasticSearch::getClient()->getIndex($config->{'index-name'});
 			if($index->exists()) $index->delete();
 			
 			// remove config
@@ -282,7 +282,7 @@
 				// delete original index
 				$index = ElasticSearch::getClient()->getIndex($settings['index_name_original']);
 				if($index->exists()) $index->delete();
-				
+	
 				// create new index
 				$index = ElasticSearch::getClient()->getIndex($settings['index-name']);
 				
