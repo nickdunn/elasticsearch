@@ -4,19 +4,7 @@
 	require_once(EXTENSIONS . '/elasticsearch/lib/class.elasticsearch_logs.php');
 		
 	class Extension_Elasticsearch extends Extension {
-		
-		public function about() {
-			return array(
-				'name'			=> 'ElasticSearch',
-				'version'		=> '0.3.1',
-				'release-date'	=> '2012-03-06',
-				'author'		=> array(
-					'name'			=> 'Nick Dunn'
-				),
-				'description' => 'Integrate ElasticSearch into your site.'
-			);
-		}
-		
+				
 		public function getSubscribedDelegates() {
 			return array(
 				array(
@@ -144,14 +132,18 @@
 			
 			$config = (object)Symphony::Configuration()->get('elasticsearch');
 			
-			// delete the ES index
-			ElasticSearch::init(FALSE);
-			$index = ElasticSearch::getClient()->getIndex($config->{'index-name'});
-			if($index->exists()) $index->delete();
+			if($config->{'index-name'}) {
+				// delete the ES index
+				ElasticSearch::init(FALSE);
+				$index = ElasticSearch::getClient()->getIndex($config->{'index-name'});
+				if($index->exists()) $index->delete();
+			}
 			
-			// remove config
-			Symphony::Configuration()->remove('elasticsearch');			
-			Administration::instance()->saveConfig();
+			if($config) {
+				// remove config
+				Symphony::Configuration()->remove('elasticsearch');			
+				Administration::instance()->saveConfig();
+			}
 			
 			// remove table
 			Symphony::Database()->query("DROP TABLE `tbl_elasticsearch_logs`");
