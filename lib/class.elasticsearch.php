@@ -16,18 +16,18 @@ Class ElasticSearch {
 	public static $types = array();
 	public static $mappings = array();
 	
-	public static function init($auto_create_index=TRUE) {
+	public static function init($auto_create_index=FALSE) {
 		
 		if(self::$client !== NULL && self::$index !== NULL) return;
 		
 		$config = Symphony::Engine()->Configuration()->get('elasticsearch');
 		
 		if(empty($config['index-name'])) {
-			throw new Exception('ElasticSearch index_name not set in configuration.');
+			throw new Exception('ElasticSearch "index-name" not set in configuration.');
 		}
 		
 		if(empty($config['host'])) {
-			throw new Exception('ElasticSearch host not set in configuration.');
+			throw new Exception('ElasticSearch "host" not set in configuration.');
 		}
 		
 		try {
