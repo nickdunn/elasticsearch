@@ -15,9 +15,9 @@
 		protected $id = NULL;
 		protected $mode = NULL;
 		
-		public function __construct(&$parent){
+		public function __construct(){
 			$this->uri = URL . '/symphony/extension/elasticsearch';
-			parent::__construct($parent);
+			parent::__construct();
 			
 			if(version_compare(Symphony::Configuration()->get('version', 'symphony'), '2.2.5', '>')) {
 				$this->use_drawer = FALSE;

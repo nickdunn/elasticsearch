@@ -9,8 +9,8 @@
 		
 		private $reindex = array();
 		
-		public function __construct(&$parent){
-			parent::__construct($parent);
+		public function __construct(){
+			parent::__construct();
 			ElasticSearch::init();
 		}
 		
