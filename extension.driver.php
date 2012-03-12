@@ -51,20 +51,23 @@
 		public function fetchNavigation() {
 			return array(
 				array(
-					'location'	=> __('ElasticSearch'),
-					'name'		=> __('Mappings'),
-					'link'		=> '/mappings/'
-				),
-				array(
-					'location'	=> __('ElasticSearch'),
-					'name'		=> __('Session Logs'),
-					'link'		=> '/sessions/'
-				),
-				array(
-					'location'	=> __('ElasticSearch'),
-					'name'		=> __('Query Logs'),
-					'link'		=> '/queries/'
-				),
+					'name'		=> __('ElasticSearch'),
+					'type'		=> 'structure',
+					'children'	=> array(
+						array(
+							'name'		=> __('Mappings'),
+							'link'		=> '/mappings/'
+						),
+						array(
+							'name'		=> __('Session Logs'),
+							'link'		=> '/sessions/'
+						),
+						array(
+							'name'		=> __('Query Logs'),
+							'link'		=> '/queries/'
+						),
+					)
+				)
 			);
 		}
 		
@@ -189,7 +192,7 @@
 		
 		public function appendPreferences($context) {
 
-			$config = Symphony::Engine()->Configuration()->get('elasticsearch');
+			$config = Symphony::Configuration()->get('elasticsearch');
 
 			$fieldset = new XMLElement('fieldset');
 			$fieldset->setAttribute('class', 'settings');
@@ -203,7 +206,7 @@
 			$label->appendChild(Widget::Input(
 				'settings[elasticsearch][host]',
 				$config['host'],
-				null,
+				'text',
 				array(
 					'placeholder' => 'e.g. http://localhost:9200/'
 				)
@@ -215,9 +218,9 @@
 			$label->appendChild(Widget::Input(
 				'settings[elasticsearch][index-name]',
 				$config['index-name'],
-				null,
+				'text',
 				array(
-					'placeholder' => 'e.g. ' . Lang::createHandle(Symphony::Engine()->Configuration->get('sitename', 'general'))
+					'placeholder' => 'e.g. ' . Lang::createHandle(Symphony::Configuration()->get('sitename', 'general'))
 				)
 			));
 			$label->appendChild(new XMLElement('span', __('Use handle format (no spaces).'), array('class'=>'help')));
@@ -232,16 +235,14 @@
 			$label = Widget::Label(__('Username <i>Optional</i>'));
 			$label->appendChild(Widget::Input(
 				'settings[elasticsearch][username]',
-				$config['username'],
-				null
+				$config['username']
 			));
 			$group->appendChild($label);
 			
 			$label = Widget::Label(__('Password <i>Optional</i>'));
 			$label->appendChild(Widget::Input(
 				'settings[elasticsearch][password]',
-				$config['password'],
-				null
+				$config['password']
 			));
 			$group->appendChild($label);
 			
@@ -249,7 +250,7 @@
 			$label->appendChild(Widget::Input(
 				'settings[elasticsearch][index_name_original]',
 				$config['index-name'],
-				null,
+				'text',
 				array(
 					'type' => 'hidden'
 				)
@@ -265,18 +266,48 @@
 		public function savePreferences($context) {
 			$settings = array_map('trim', $context['settings']['elasticsearch']);
 			
+			$index_to_delete = NULL;
+			$index_to_create = NULL;
+			
 			// index name has changed, so delete the original and create new
-			if(!empty($settings['index_name_original']) && ($settings['index-name'] !== $settings['index_name_original'])) {
+			if($settings['index-name'] !== $settings['index_name_original']) {
+				$index_to_delete = $settings['index_name_original'];
+				$index_to_create = $settings['index-name'];
+			}
+			
+			// only try to delete existing index if it exists (i.e. don't run this
+			// the first time the extension is configured and there's no existing index)
+			if(!empty($index_to_delete)) {
 				
-				// instantiate extension's ES helper class, do not auto create the index
-				ElasticSearch::init(FALSE);
+				// instantiate extension's ES helper class
+				ElasticSearch::init(
+					$settings['host'],
+					$index_to_delete,
+					$settings['username'],
+					$settings['password']
+				);
 				
 				// delete original index
-				$index = ElasticSearch::getClient()->getIndex($settings['index_name_original']);
+				$index = ElasticSearch::getClient()->getIndex($index_to_delete);
 				if($index->exists()) $index->delete();
-	
+				
+				// reset
+				ElasticSearch::flush();
+				
+			}
+			
+			if(!empty($index_to_create)) {
+				
+				// instantiate extension's ES helper class
+				ElasticSearch::init(
+					$settings['host'],
+					$index_to_create,
+					$settings['username'],
+					$settings['password']
+				);
+				
 				// create new index
-				$index = ElasticSearch::getClient()->getIndex($settings['index-name']);
+				$index = ElasticSearch::getClient()->getIndex($index_to_create);
 				
 				$index_settings_file = WORKSPACE . '/elasticsearch/index.json';
 				$index_settings = array();
@@ -291,7 +322,7 @@
 				}
 				
 				$index->create($index_settings, TRUE);
-				
+			
 			}
 			
 			unset($context['settings']['elasticsearch']['index_name_original']);
