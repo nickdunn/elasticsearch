@@ -16,38 +16,50 @@ Class ElasticSearch {
 	public static $types = array();
 	public static $mappings = array();
 	
-	public static function init($auto_create_index=FALSE) {
+	public static function init($host='', $index_name='', $username='', $password='') {
 		
 		if(self::$client !== NULL && self::$index !== NULL) return;
 		
 		$config = Symphony::Engine()->Configuration()->get('elasticsearch');
 		
-		if(empty($config['index-name'])) {
-			throw new Exception('ElasticSearch "index-name" not set in configuration.');
-		}
+		if(empty($host)) $host = $config['host'];
+		if(empty($index_name)) $index_name = $config['index-name'];
+		if(empty($username)) $username = $config['username'];
+		if(empty($password)) $password = $config['password'];
 		
-		if(empty($config['host'])) {
+		if(empty($host)) {
 			throw new Exception('ElasticSearch "host" not set in configuration.');
 		}
 		
+		if(empty($index_name)) {
+			throw new Exception('ElasticSearch "index-name" not set in configuration.');
+		}
+		
 		try {
-			$client = new Elastica_Client(array('url' => $config['host']));
-			if(!empty($config['username']) && !empty($config['password'])) {
-				$client->addHeader('Authorization', 'Basic ' . base64_encode($config['username'] . ':' . $config['password']));
+			$client = new Elastica_Client(array('url' => $host));
+			if(!empty($username) && !empty($password)) {
+				$client->addHeader('Authorization', 'Basic ' . base64_encode($username . ':' . $password));
 			}
 			$client->getStatus();
 		} catch (Exception $e) {
 			throw new Exception('ElasticSearch client: ' . $e->getMessage());
 		}
 		
-		$index = $client->getIndex($config['index-name']);
+		$index = $client->getIndex($index_name);
 		
 		if($auto_create_index) {
-			if(!$index->exists()) $index->create(array(), TRUE);
+			//if(!$index->exists()) $index->create(array(), TRUE);
 		}
 		
 		self::$client = $client;
 		self::$index = $index;
+	}
+	
+	public static function flush() {
+		self::$client = NULL;
+		self::$index = NULL;
+		self::$types = array();
+		self::$mappings = array();
 	}
 	
 	public static function getIndex() {
