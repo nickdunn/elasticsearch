@@ -38,7 +38,7 @@
 			if (!isset($filter->date_from) || empty($filter->date_from)) $filter->date_from = date('Y-m-d', strtotime('last month'));
 			if (!isset($filter->date_to) || empty($filter->date_to)) $filter->date_to = date('Y-m-d', strtotime('today'));
 			if (!isset($filter->results['value']) || !is_numeric($filter->results['value'])) $filter->results = NULL;
-			if (!isset($filter->depth['value']) || $filter->depth['value'] == '') $filter->depth = NULL;
+			if (!isset($filter->depth['value']) || !is_numeric($filter->depth['value'])) $filter->depth = NULL;
 			if (!isset($filter->session_id) || empty($filter->session_id)) $filter->session_id = NULL;
 			if (!isset($filter->user_agent) || empty($filter->user_agent)) $filter->user_agent = NULL;
 			if (!isset($filter->ip) || empty($filter->ip)) $filter->ip = NULL;

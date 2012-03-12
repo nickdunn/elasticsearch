@@ -30,8 +30,8 @@
 			if (!isset($filter->keywords) || empty($filter->keywords)) $filter->keywords = NULL;
 			if (!isset($filter->date_from) || empty($filter->date_from)) $filter->date_from = date('Y-m-d', strtotime('last month'));
 			if (!isset($filter->date_to) || empty($filter->date_to)) $filter->date_to = date('Y-m-d', strtotime('today'));
-			if (!isset($filter->average_results['value']) || !is_numeric($filter->average_results['value'])) $filter->average_results = NULL;
-			if (!isset($filter->average_depth['value']) || $filter->average_depth['value'] == '') $filter->average_depth = NULL;
+			if (!isset($filter->average_results['value']) || !is_numeric($filter->average_results['value'])) $filter->average_results = NULL;			
+			if (!isset($filter->average_depth['value']) || !is_numeric($filter->average_depth['value'])) $filter->average_depth = NULL;
 			
 			if(is_array($filter->average_results)) $filter->average_results = implode('', $filter->average_results);
 			if(is_array($filter->average_depth)) $filter->average_depth = implode('', $filter->average_depth);
