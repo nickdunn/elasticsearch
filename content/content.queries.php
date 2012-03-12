@@ -1,7 +1,6 @@
 <?php
 	
 	require_once(EXTENSIONS . '/elasticsearch/lib/class.elasticsearch_administrationpage.php');
-	require_once(EXTENSIONS . '/elasticsearch/lib/class.drawer.php');
 	
 	class contentExtensionElasticSearchQueries extends ElasticSearch_AdministrationPage {
 		
@@ -70,25 +69,18 @@
 			$this->filter = $filter;
 			$this->pagination = $pagination;
 						
-			$filters_drawer = new Drawer('Filters', $this->__buildDrawerHTML($filter));
+			$filters_drawer = new ElasticSearch_Drawer('Filters', $this->__buildDrawerHTML($filter));
 			
 		// Set up page meta data
 		/*-----------------------------------------------------------------------*/	
 			
 			$this->setPageType('table');
-			$this->setTitle(__('Symphony') . ' &ndash; ' . __('Search Index') . ' &ndash; ' . __('Query Logs'));
-			$this->appendSubheading(
-				__('Search Index') . ' &rsaquo; ' . __('Query Logs') .
-				Widget::Anchor(
-					__('Export CSV'),
-					$this->__buildURL(NULL, array('output' => 'csv')),
-					NULL,
-					'button'
-				)->generate()
-				. (($this->use_drawer) ? $filters_drawer->button->generate() : '')
-			);
+			$this->setTitle(__('Symphony') . ' &ndash; ' . __('ElasticSearch') . ' &ndash; ' . __('Query Logs'));
+			$this->appendSubheading(__('Query Logs'), Widget::Anchor(
+				__('Export CSV'), $this->__buildURL(NULL, array('output' => 'csv')), NULL, 'button'
+			));
 			
-			if($this->use_drawer) $this->Contents->appendChild($filters_drawer->drawer);
+			$this->Context->appendChild($filters_drawer->drawer);
 			
 			
 		// Build summary
@@ -268,6 +260,7 @@
 			
 			$label = new XMLElement('label', '<span>'.__('Query').'</span>', array('class' => 'keywords'));
 			$label->appendChild(new XMLElement('input', NULL, array(
+				'type' => 'text',
 				'placeholder' => __('e.g. %s', array($noun)),
 				'name' => 'filter[keywords]',
 				'value' => $filter->keywords
@@ -285,7 +278,8 @@
 				'type' => 'text',
 				'name' => 'filter[average_results][value]',
 				'value' => trim($filter->average_results, '=<>'),
-				'autocomplete' => 'off'
+				'autocomplete' => 'off',
+				'placeholder' => __('all'),
 			)));
 			
 			$span->appendChild(new XMLElement('span', ' ' . __('result(s)')));
@@ -303,14 +297,15 @@
 				'type' => 'text',
 				'name' => 'filter[average_depth][value]',
 				'value' => trim($filter->average_depth, '=<>'),
-				'autocomplete' => 'off'
+				'autocomplete' => 'off',
+				'placeholder' => __('all')
 			)));
 			$span->appendChild(new XMLElement('span', ' ' . __('page(s)')));
 			$label->appendChild($span);
 			$form->appendChild($label);
 			
-			$form->appendChild(new XMLElement('input', NULL, array('type' => 'submit', 'value' => __('Apply Filters'), 'class' => 'button')));
-			$form->appendChild(new XMLElement('input', NULL, array('type' => 'button', 'value' => __('Clear Filters'), 'class' => 'secondary button')));
+			$form->appendChild(new XMLElement('input', NULL, array('type' => 'submit', 'value' => __('Apply Filters'), 'class' => 'button create')));
+			$form->appendChild(new XMLElement('input', NULL, array('type' => 'button', 'value' => __('Clear'), 'class' => 'button clear')));
 			
 			return $form->generate();
 		}

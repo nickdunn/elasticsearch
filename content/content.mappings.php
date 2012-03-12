@@ -54,8 +54,10 @@
 			$this->addStylesheetToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.mappings.css', 'screen', 102);
 			
 			$this->setPageType('table');
-			$this->setTitle(__('Symphony') . ' &ndash; ' . __('ElasticSearch') . ' &ndash; ' . __('Mappings'));
-						
+			$this->setTitle(__('Symphony') . ' &ndash; ' . __('ElasticSearch') . ' &ndash; ' . __('Mappings'));			
+			$this->appendSubheading(__('Mappings'));
+			
+			
 			$types = ElasticSearch::getAllTypes();
 			
 			$tableHead = array();
@@ -130,8 +132,7 @@
 				array('delete', false, __('Delete Mapping')),
 			);
 			
-			$actions->appendChild(Widget::Select('with-selected', $options));
-			$actions->appendChild(Widget::Input('action[apply]', __('Apply'), 'submit'));
+			$actions->appendChild(Widget::Apply($options));
 			
 			$this->Form->appendChild($actions);
 

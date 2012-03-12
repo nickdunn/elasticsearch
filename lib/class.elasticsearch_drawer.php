@@ -1,6 +1,6 @@
 <?php
 
-Class Drawer {
+Class ElasticSearch_Drawer {
 	
 	public $drawer = NULL;
 	public $button = NULL;
@@ -9,12 +9,12 @@ Class Drawer {
 		
 		$handle = Lang::createHandle($title);
 		
-		$class = 'drawer ' . $handle;
+		$class = 'elasticsearch-drawer ' . $handle;
 		if($expanded) $class .= ' expanded';
 		
 		$drawer = new XMLElement('div');
 		$drawer->setAttribute('class', $class);
-		$drawer->setAttribute('id', 'drawer-' . $handle);
+		$drawer->setAttribute('id', 'elasticsearch-drawer-' . $handle);
 		
 		$contents = new XMLElement('div', $contents, array('class' => 'contents'));
 		$drawer->appendChild($contents);

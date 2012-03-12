@@ -2,8 +2,6 @@
 	
 	require_once(EXTENSIONS . '/elasticsearch/lib/class.elasticsearch_administrationpage.php');
 	require_once(EXTENSIONS . '/elasticsearch/lib/phpbrowscap/browscap/Browscap.php');
-	
-	require_once(EXTENSIONS . '/elasticsearch/lib/class.drawer.php');
 
 	class contentExtensionElasticSearchSessions extends ElasticSearch_AdministrationPage {
 		
@@ -18,14 +16,12 @@
 			
 			$this->addStylesheetToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.stats.css', 'screen', 102);
 			
-			if($this->use_drawer) {
-				$this->addStylesheetToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.drawer.css', 'screen', 103);
-				$this->addScriptToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.drawer.js', 103);
-
-				$this->addScriptToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.jquery.ui.js', 104);
-				$this->addStylesheetToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.jquery.daterangepicker.css', 'screen', 105);
-				$this->addScriptToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.jquery.daterangepicker.js', 106);
-			}
+			$this->addStylesheetToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.drawer.css', 'screen', 103);
+			$this->addScriptToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.drawer.js', 103);
+			
+			$this->addScriptToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.jquery.ui.js', 104);
+			$this->addStylesheetToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.jquery.daterangepicker.css', 'screen', 105);
+			$this->addScriptToHead(URL . '/extensions/elasticsearch/assets/elasticsearch.jquery.daterangepicker.js', 106);
 			
 			parent::view(FALSE);
 			
@@ -77,25 +73,18 @@
 			$this->filter = $filter;
 			$this->pagination = $pagination;
 			
-			$filters_drawer = new Drawer('Filters', $this->__buildDrawerHTML($filter));
+			$filters_drawer = new ElasticSearch_Drawer('Filters', $this->__buildDrawerHTML($filter));
 			
 			// Set up page meta data
 			/*-----------------------------------------------------------------------*/	
 			
 			$this->setPageType('table');
-			$this->setTitle(__('Symphony') . ' &ndash; ' . __('Search Index') . ' &ndash; ' . __('Session Logs'));
-			$this->appendSubheading(
-				__('Search Index') . ' &rsaquo; ' . __('Session Logs') .
-				Widget::Anchor(
-					__('Export CSV'),
-					$this->__buildURL(NULL, array('output' => 'csv')),
-					NULL,
-					'button'
-				)->generate()
-				. (($this->use_drawer) ? $filters_drawer->button->generate() : '')
-			);
+			$this->setTitle(__('Symphony') . ' &ndash; ' . __('ElasticSearch') . ' &ndash; ' . __('Session Logs'));
+			$this->appendSubheading(__('Session Logs'), Widget::Anchor(
+				__('Export CSV'), $this->__buildURL(NULL, array('output' => 'csv')), NULL, 'button'
+			));
 			
-			if($this->use_drawer) $this->Contents->appendChild($filters_drawer->drawer);
+			$this->Context->appendChild($filters_drawer->drawer);
 			
 			$tableHead = array();
 			$tableBody = array();
@@ -277,6 +266,7 @@
 			
 			$label = new XMLElement('label', '<span>'.__('Query').'</span>', array('class' => 'keywords'));
 			$label->appendChild(new XMLElement('input', NULL, array(
+				'type' => 'text',
 				'placeholder' => __('e.g. %s', array($noun)),
 				'name' => 'filter[keywords]',
 				'value' => $filter->keywords
@@ -294,7 +284,8 @@
 				'type' => 'text',
 				'name' => 'filter[results][value]',
 				'value' => trim($filter->results, '=<>'),
-				'autocomplete' => 'off'
+				'autocomplete' => 'off',
+				'placeholder' => __('all'),
 			)));
 			
 			$span->appendChild(new XMLElement('span', ' ' . __('result(s)')));
@@ -312,7 +303,8 @@
 				'type' => 'text',
 				'name' => 'filter[depth][value]',
 				'value' => trim($filter->depth, '=<>'),
-				'autocomplete' => 'off'
+				'autocomplete' => 'off',
+				'placeholder' => __('all'),
 			)));
 			$span->appendChild(new XMLElement('span', ' ' . __('page(s)')));
 			$label->appendChild($span);
@@ -320,24 +312,27 @@
 			
 			$label = new XMLElement('div', '<span>'.__('User').'</span>', array('class' => 'label triple-input'));
 			$label->appendChild(new XMLElement('input', NULL, array(
+				'type' => 'text',
 				'placeholder' => __('Session ID'),
 				'name' => 'filter[session_id]',
 				'value' => $filter->session_id
 			)));
 			$label->appendChild(new XMLElement('input', NULL, array(
+				'type' => 'text',
 				'placeholder' => __('IP Address'),
 				'name' => 'filter[ip]',
 				'value' => $filter->ip
 			)));
 			$label->appendChild(new XMLElement('input', NULL, array(
+				'type' => 'text',
 				'placeholder' => __('Browser'),
 				'name' => 'filter[user_agent]',
 				'value' => $filter->user_agent
 			)));
 			$form->appendChild($label);
 			
-			$form->appendChild(new XMLElement('input', NULL, array('type' => 'submit', 'value' => __('Apply Filters'), 'class' => 'button')));
-			$form->appendChild(new XMLElement('input', NULL, array('type' => 'button', 'value' => __('Clear Filters'), 'class' => 'secondary button')));
+			$form->appendChild(new XMLElement('input', NULL, array('type' => 'submit', 'value' => __('Apply Filters'), 'class' => 'button create')));
+			$form->appendChild(new XMLElement('input', NULL, array('type' => 'button', 'value' => __('Clear'), 'class' => 'button clear')));
 			
 			return $form->generate();
 		}

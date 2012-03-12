@@ -2,10 +2,9 @@
 	
 	require_once(TOOLKIT . '/class.administrationpage.php');
 	require_once(EXTENSIONS . '/elasticsearch/lib/class.elasticsearch.php');
+	require_once(EXTENSIONS . '/elasticsearch/lib/class.elasticsearch_drawer.php');
 	
 	class ElasticSearch_AdministrationPage extends AdministrationPage {
-		
-		public $use_drawer = TRUE;
 		
 		protected $filter = NULL;
 		protected $sort = NULL;
@@ -18,10 +17,6 @@
 		public function __construct(){
 			$this->uri = URL . '/symphony/extension/elasticsearch';
 			parent::__construct();
-			
-			if(version_compare(Symphony::Configuration()->get('version', 'symphony'), '2.2.5', '>')) {
-				$this->use_drawer = FALSE;
-			}
 		}
 		
 		public function build($context) {
