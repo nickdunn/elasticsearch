@@ -6,8 +6,8 @@
 				"fields": {
 					"title": {"type" : "string"},
 					"raw" : {"type" : "string", "index" : "not_analyzed"},
-					"fulltext" : {"type" : "string", "analyzer": "symphony_fulltext"},
-					"autocomplete" : {"type" : "string", "analyzer": "symphony_autocomplete"}
+					"symphony_fulltext" : {"type" : "string", "analyzer": "symphony_fulltext"},
+					"symphony_autocomplete" : {"type" : "string", "analyzer": "symphony_autocomplete"}
 				}
 			},
 			"content": {
@@ -15,8 +15,8 @@
 				"fields": {
 					"content": {"type" : "string"},
 					"raw" : {"type" : "string", "index" : "not_analyzed"},
-					"fulltext" : {"type" : "string", "analyzer": "symphony_fulltext"},
-					"autocomplete" : {"type" : "string", "analyzer": "symphony_autocomplete"}
+					"symphony_fulltext" : {"type" : "string", "analyzer": "symphony_fulltext"},
+					"symphony_autocomplete" : {"type" : "string", "analyzer": "symphony_autocomplete"}
 				}
 			},
 			"date": {
