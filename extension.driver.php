@@ -24,7 +24,7 @@
 				),
 				array(
 					'page'		=> '/publish/',
-					'delegate'	=> 'Delete',
+					'delegate'	=> 'EntryPreDelete',
 					'callback'	=> 'deleteEntry'
 				),
 				array(
