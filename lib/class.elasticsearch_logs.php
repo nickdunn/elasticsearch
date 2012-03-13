@@ -8,7 +8,7 @@ Class ElasticSearchLogs {
 		self::$_session_id = $session_id;
 	}
 	
-	public static function save($keywords=NULL, $sections=NULL, $page=1, $total_entries=0) {
+	public static function save($keywords=NULL, $keywords_raw=NULL, $sections=NULL, $page=1, $total_entries=0) {
 		
 		if(is_array($sections)) {
 			natsort($sections);
@@ -42,6 +42,7 @@ Class ElasticSearchLogs {
 					'id' => $id,
 					'date' => date('Y-m-d H:i:s', time()),
 					'keywords' => Symphony::Database()->cleanValue($keywords),
+					'keywords_raw' => Symphony::Database()->cleanValue($keywords_raw),
 					'sections' => Symphony::Database()->cleanValue($sections),
 					'page' => $page,
 					'results' => $total_entries,
@@ -120,6 +121,7 @@ Class ElasticSearchLogs {
 			"SELECT
 				date,
 				keywords,
+				keywords_raw,
 				sections,
 				page,
 				results
@@ -233,6 +235,7 @@ Class ElasticSearchLogs {
 		$sql = sprintf(
 			"SELECT
 				DISTINCT(keywords) AS `keywords`,
+				keywords_raw,
 				COUNT(keywords) AS `count`,
 				AVG(results) AS `average_results`,
 				AVG(page) AS `average_depth`

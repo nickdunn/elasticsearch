@@ -79,6 +79,7 @@
 				  `id` varchar(255) NOT NULL DEFAULT '',
 				  `date` datetime NOT NULL,
 				  `keywords` varchar(255) DEFAULT NULL,
+				  `keywords_raw` varchar(255) DEFAULT NULL,
 				  `sections` varchar(255) DEFAULT NULL,
 				  `page` int(11) NOT NULL,
 				  `results` int(11) DEFAULT NULL,

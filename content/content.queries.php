@@ -114,6 +114,7 @@
 			// append table headings
 			$tableHead[] = array(__('Rank'), 'col');
 			$tableHead[] = $this->__buildColumnHeader(__('Query'), 'keywords', 'asc');
+			$tableHead[] = $this->__buildColumnHeader(__('Query (Raw)'), 'keywords', 'asc');
 			$tableHead[] = $this->__buildColumnHeader(__('Frequency'), 'count', 'desc');
 			$tableHead[] = array(__('%'), 'col');
 			$tableHead[] = array(__('Cumulative %'), 'col');
@@ -157,6 +158,10 @@
 					$r[] = Widget::TableData(
 						(empty($row['keywords']) ? __('None') : stripslashes($row['keywords'])),
 						(empty($row['keywords']) ? 'inactive query' : 'query')
+					);
+					$r[] = Widget::TableData(
+						(empty($row['keywords']) ? __('None') : htmlentities(stripslashes($row['keywords_raw']))),
+						'inactive query'
 					);
 					$r[] = Widget::TableData($row['count'], 'count');
 					$r[] = Widget::TableData((number_format($row_percent, 2)) . '%', 'percent');

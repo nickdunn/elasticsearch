@@ -259,7 +259,7 @@
 			
 			// log query if logging is enabled
 			if ($config->{'log-searches'} === 'yes') {
-				ElasticSearchLogs::save($params->keywords, $sections, $params->{'current-page'}, $query_result->getTotalHits());
+				ElasticSearchLogs::save($params->keywords, $params->{'keywords-raw'}, $sections, $params->{'current-page'}, $query_result->getTotalHits());
 			}
 			
 			return $xml;
