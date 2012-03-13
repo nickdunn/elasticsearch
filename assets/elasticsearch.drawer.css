@@ -85,10 +85,10 @@
 }
 
 .elasticsearch-drawer {
-	border-top: 1px solid #eee;
+	border-top: 1px solid rgba(0,0,0,0.05);
 	clear: both;
-	margin-top: 20px;
-	margin-bottom: 20px;
+	margin-top: 35px;
+	margin-bottom: -5px;
 }
 
 
