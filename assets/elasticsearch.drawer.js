@@ -2,7 +2,7 @@ jQuery(document).ready(function() {
 	
 	var $ = jQuery;
 	
-	var drawer = jQuery('#elasticsearch-drawer-filters');
+	var drawer = jQuery('#drawer-elasticsearch');
 	if(!drawer.length) return;
 	
 	var date_min = '';
@@ -12,10 +12,16 @@ jQuery(document).ready(function() {
 		// if the drawer is collapsed (display: none) we need to
 		// temporarily show it to allow element heights to be calculated
 		var drawer = jQuery(this).parents('.drawer:not(.expanded)');
-		if(drawer.length) drawer.show();
+		// is it open by default? if not, open it, calculate, then close again
+		var is_visible = drawer.is(':visible');
+		if(!is_visible) {
+			is_visible.show();
+		}
 		var height = jQuery(this).height();		
 		jQuery(this).parent().find('span.conjunctive').height(height);
-		if(drawer.length) drawer.hide();
+		if(!is_visible) {
+			is_visible.hide();
+		}
 
 		date_min = jQuery(this).parent().data('dateMin');
 		date_max = jQuery(this).parent().data('dateMax');

@@ -68,19 +68,18 @@
 			$this->sort = $sort;
 			$this->filter = $filter;
 			$this->pagination = $pagination;
-						
-			$filters_drawer = new ElasticSearch_Drawer('Filters', $this->__buildDrawerHTML($filter));
 			
 		// Set up page meta data
 		/*-----------------------------------------------------------------------*/	
 			
 			$this->setPageType('table');
 			$this->setTitle(__('Symphony') . ' &ndash; ' . __('ElasticSearch') . ' &ndash; ' . __('Query Logs'));
+			
+			$this->insertDrawer(Widget::Drawer('elasticsearch', __('Filter Queries'), $this->__buildDrawerHTML($filter), 'opened'), 'horizontal');
+			
 			$this->appendSubheading(__('Query Logs'), Widget::Anchor(
 				__('Export CSV'), $this->__buildURL(NULL, array('output' => 'csv')), NULL, 'button'
 			));
-			
-			$this->Context->appendChild($filters_drawer->drawer);
 			
 			
 		// Build summary
@@ -312,7 +311,7 @@
 			$form->appendChild(new XMLElement('input', NULL, array('type' => 'submit', 'value' => __('Apply Filters'), 'class' => 'button create')));
 			$form->appendChild(new XMLElement('input', NULL, array('type' => 'button', 'value' => __('Clear'), 'class' => 'button clear')));
 			
-			return $form->generate();
+			return $form;
 		}
 		
 	}

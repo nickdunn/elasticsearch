@@ -39,7 +39,7 @@
 	color: #999;
 	margin-top: 2px;
 	padding: 4px 2px;
-	line-height: 1;
+	line-height: 1.1;
 	vertical-align: baseline;
 	border: none;
 	border-top: 1px solid rgba(0, 0, 0, 0.25);
@@ -75,61 +75,47 @@
 	color: #ccc;
 }
 
-.elasticsearch-drawer .triple-input > span {
+#drawer-elasticsearch {
+	position: relative;
+}
+
+#drawer-elasticsearch .triple-input > span {
 	display: block;
 }
 
-.elasticsearch-drawer .triple-input input {
+#drawer-elasticsearch .triple-input input {
 	width: 80px;
 	margin-right: 3px;
 }
 
-.elasticsearch-drawer {
-	border-top: 1px solid rgba(0,0,0,0.05);
-	clear: both;
-	margin-top: 35px;
-	margin-bottom: 20px;
-}
-
-
-.elasticsearch-drawer.expanded {
-	display: block;
-}
-
-.elasticsearch-drawer > .contents {
-	padding: 15px 0 0 0;
-	overflow: hidden;
-	color: darkGray;
-}
-
-.elasticsearch-drawer > .contents form {
+#drawer-elasticsearch > .contents form {
 	margin: 0;
 }
 
-.elasticsearch-drawer label,
-.elasticsearch-drawer .label {
+#drawer-elasticsearch label,
+#drawer-elasticsearch .label {
 	float: left;
 	margin: 0 20px 0 0;
 	min-height: 45px;
 }
 
-.elasticsearch-drawer input[type="text"],
-.elasticsearch-drawer textarea,
-.elasticsearch-drawer select {
+#drawer-elasticsearch input[type="text"],
+#drawer-elasticsearch textarea,
+#drawer-elasticsearch select {
 	font-size: 1em;
 	padding: 4px 2px;
 	outline: none;
 	margin-top: 2px;
 }
 
-.elasticsearch-drawer select {
+#drawer-elasticsearch select {
 	padding: 1px;
 }
 
-.elasticsearch-drawer input.button {
+#drawer-elasticsearch input.button {
 	margin-top: 18px;
 }
 
-.elasticsearch-drawer input[type='submit'] {
+#drawer-elasticsearch input[type='submit'] {
 	margin-left: 0;
 }
