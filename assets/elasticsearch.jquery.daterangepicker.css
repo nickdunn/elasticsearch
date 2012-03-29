@@ -4,7 +4,7 @@
 
 .ui-daterangepickercontain {
 	position: absolute;
-	z-index: 999;
+	z-index: 99999;
 }
 .ui-daterangepickercontain .ui-daterangepicker {
 	float: left;
@@ -17,6 +17,7 @@
 	-webkit-border-radius: 0 0 5px 5px;
 	margin: -1px 0 0 0;
 	border: 1px solid rgba(0,0,0,0.25);
+	border-top: 1px solid rgba(0,0,0,0.1);
 }
 
 .ui-daterangepickercontain .ui-daterangepicker.daterange-open {
@@ -37,7 +38,7 @@
 	-webkit-box-shadow: 2px -4px 4px rgba(0, 0, 0, 0.075);
 }
 .ui-daterangepicker ul {
-	width: 179px;
+	width: 173px;
 	background: none;
 	border: 0;
 	padding: 3px 0 0 0;
@@ -54,6 +55,7 @@
 	display: block;
 	padding: 6px 8px;
 	text-decoration: none;
+	border: none;
 }
 
 .ui-daterangepicker .range-start {
@@ -84,6 +86,7 @@
 	text-decoration: none;
 	font-size: 16px;
 	top: -5px;
+	border: none;
 }
 .ui-datepicker .ui-datepicker-prev { left: 6px; }
 .ui-datepicker .ui-datepicker-next { right: 6px; }
@@ -146,6 +149,7 @@
 	text-align: center;
 	text-decoration: none;
 	padding: 3px 0;
+	border: none;
 }
 
 .ui-datepicker .ui-datepicker-other-month {

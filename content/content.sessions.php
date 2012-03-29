@@ -85,8 +85,6 @@
 				__('Export CSV'), $this->__buildURL(NULL, array('output' => 'csv')), NULL, 'button'
 			));
 			
-			$this->Context->appendChild($filters_drawer->drawer);
-			
 			$tableHead = array();
 			$tableBody = array();
 			

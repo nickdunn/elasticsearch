@@ -5,29 +5,15 @@ jQuery(document).ready(function() {
 	var drawer = jQuery('#drawer-elasticsearch');
 	if(!drawer.length) return;
 	
-	var date_min = '';
-	var date_max = '';
+	// is drawer open by default? if not, open it, calculate, then close again
+	var is_drawer_open = drawer.is(':visible');
+	if(!is_drawer_open) drawer.show();
+	
+	var date_range = drawer.find('.date-range');
+	var date_min = date_range.data('datamin');
+	var date_max = date_range.data('datamax');
 
-	jQuery('.date-range input:first').each(function() {
-		// if the drawer is collapsed (display: none) we need to
-		// temporarily show it to allow element heights to be calculated
-		var drawer = jQuery(this).parents('.drawer:not(.expanded)');
-		// is it open by default? if not, open it, calculate, then close again
-		var is_visible = drawer.is(':visible');
-		if(!is_visible) {
-			is_visible.show();
-		}
-		var height = jQuery(this).height();		
-		jQuery(this).parent().find('span.conjunctive').height(height);
-		if(!is_visible) {
-			is_visible.hide();
-		}
-
-		date_min = jQuery(this).parent().data('dateMin');
-		date_max = jQuery(this).parent().data('dateMax');
-	});
-
-	jQuery('.date-range input').daterangepicker({
+	date_range.find('input').daterangepicker({
 		arrows: false,
 		presetRanges: [
 			{text: 'Last 7 days', dateStart: 'today-7days', dateEnd: 'today' },
@@ -51,23 +37,26 @@ jQuery(document).ready(function() {
 		latestDate: date_max
 	});
 
-	jQuery('.elasticsearch-drawer.filters form').bind('submit', function(e) {
+	drawer.find('form').bind('submit', function(e) {
 		e.preventDefault();
-		var get = '';
+		var url = '';
 		jQuery(this).find('input, textarea, select').each(function() {
-			var type = jQuery(this).attr('type');
 			// no need to send buttons
+			var type = jQuery(this).attr('type');
 			if(type == 'button' || type == 'submit') return;
-			get += jQuery(this).attr('name') + '=' + encodeURI(jQuery(this).val()) + '&';
+			
+			url += jQuery(this).attr('name') + '=' + encodeURI(jQuery(this).val()) + '&';
 		});
 		// remove trailing ampersand
-		get = get.replace(/&$/,'');
-		window.location.href = '?' + get;
+		url = url.replace(/&$/,'');
+		window.location.href = '?' + url;
 	});
 
-	jQuery('.elasticsearch-drawer.filters input.clear').bind('click', function(e) {
+	drawer.find('input.clear').bind('click', function(e) {
 		e.preventDefault();
 		window.location.href = '?';
 	});
+	
+	if(!is_drawer_open) drawer.hide();
 		
 });
