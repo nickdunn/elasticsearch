@@ -248,6 +248,8 @@ Class ElasticSearch {
 		$keywords = preg_replace("/([+-])\s+/", "", $keywords);
 	    // remove multiple spaces
 		$keywords = preg_replace("/\s{1,}/", " ", $keywords);
+		// remove characters from start/end (again)
+		$keywords = trim($keywords, '-+ ');
 		// add trailing quotes if missing
 		$quotes = substr_count($keywords, '"');
 		if($quotes % 2) $keywords .= '"';
